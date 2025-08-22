@@ -1,0 +1,35 @@
+.states
+assets/external/
+*.db
+*.py[cod]
+.web
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+db/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+
+# Environment variable files
+.env
+.env.*
+
+# Additional Python cache directories
+.mypy_cache/
+.pytest_cache/
+
+# Ignore SQL dump archives
+*.sql.zip
+
+# Large files
+os
+sys
+ngrok.yml
+
+# ngrok configuration
+ngrok.yml
