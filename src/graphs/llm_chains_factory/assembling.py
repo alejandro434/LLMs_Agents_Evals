@@ -1,4 +1,7 @@
-"""This module contains the logic to build LLM chains."""
+"""This module contains the logic to build LLM chains.
+
+uv run python src/graphs/llm_chains_factory/assembling.py
+"""
 
 # %%
 from collections.abc import Callable
@@ -8,12 +11,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableLambda
 from pydantic import BaseModel
 
-from src.graphs.llm_instances_factory.dynamic_fewshots import (
-    create_dynamic_fewshooter,
-)
+from src.graphs.llm_chains_factory.dynamic_fewshots import create_dynamic_fewshooter
 from src.utils import get_llm
 
 
+# %%
 def build_prompt(
     system_prompt: str,
     k: int = 5,
@@ -64,3 +66,23 @@ def build_structured_chain(
     if postprocess is not None:
         pipeline = pipeline | RunnableLambda(postprocess)
     return pipeline.with_retry(stop_after_attempt=3)
+
+
+if __name__ == "__main__":
+
+    class TestOutputSchema(BaseModel):
+        """Test output schema."""
+
+        query: str
+        response: str
+
+    chain = build_structured_chain(
+        system_prompt="You are a helpful assistant that can answer questions about the graph.",
+        output_schema=TestOutputSchema,
+        k=5,
+        temperature=0,
+        postprocess=None,
+        group="TARGET_LLM_CHAIN_1",
+        yaml_path=Path(__file__).parent / "test_fewshots.yml",
+    )
+    print(chain.invoke("numero de proyectos?").model_dump_json(indent=2))

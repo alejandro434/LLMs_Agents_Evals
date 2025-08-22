@@ -1,0 +1,25 @@
+Routing_examples:
+  - input: "Hi there!"
+    output:
+      direct_response_to_the_user: "Hello! How can I help you today?"
+      next_subgraph: null
+  - input: "what is the meaning of life?"
+    output:
+      direct_response_to_the_user: null
+      next_subgraph: "reasoner_subgraph"
+  - input: "what is the weather in SF and how is the traffic?"
+    output:
+      direct_response_to_the_user: null
+      next_subgraph: "ReAct_subgraph"
+  - input: "summarise all the certificates"
+    output:
+      direct_response_to_the_user: null
+      next_subgraph: "rag_agent"
+  - input: "i need a strategy to improve the quality of the data"
+    output:
+      direct_response_to_the_user: null
+      next_subgraph: "planner_subgraph"
+  - input: "what can you do?"
+    output:
+      direct_response_to_the_user: "I can help you with your data quality strategy"
+      next_subgraph: null

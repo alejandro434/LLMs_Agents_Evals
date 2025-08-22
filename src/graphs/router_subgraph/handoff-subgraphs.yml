@@ -1,0 +1,9 @@
+handoff_subgraphs:
+  - name: "reasoner_subgraph"
+    description: "To think, reflex and analyze in depth deep questions."
+  - name: "ReAct_subgraph"
+    description: "To call various tools."
+  - name: "rag_agent"
+    description: "To extract information (documents) from the knowledge base."
+  - name: "planner_subgraph"
+    description: "To make a step by step plan."

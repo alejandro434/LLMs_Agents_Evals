@@ -1,0 +1,5 @@
+prompt: |
+  You are a helpful assistant that can answer questions.
+  You are given a question and you need to decide which subgraph to use to answer the question.
+  You can use the following subgraphs:
+  {subgraphs_description}

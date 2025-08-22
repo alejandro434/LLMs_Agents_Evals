@@ -251,13 +251,13 @@ if __name__ == "__main__":
         yaml_path=args.yaml_path, k=args.k, group=args.group
     )
     # Consolidate system messages for Bedrock compatibility
-    consolidated_system = (
+    CONSOLIDATED_SYSTEM = (
         f"{SYSTEM_PROMPT}\n\n"
         "## A continuación, ejemplos de preguntas y respuestas parecidas:"
     )
     TEST_PROMPT = ChatPromptTemplate.from_messages(
         [
-            ("system", consolidated_system),
+            ("system", CONSOLIDATED_SYSTEM),
             FEW_SHOT_PROMPT,
             ("human", "{input}"),
         ]
