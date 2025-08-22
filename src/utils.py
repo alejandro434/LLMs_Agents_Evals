@@ -14,7 +14,7 @@ load_dotenv(override=True)
 def get_llm():
     """Get the LLM chain."""
     return ChatOpenAI(
-        model="gpt-4.1-nano",
+        model="gpt-4.1-mini",
         temperature=0,
         max_tokens=None,
         timeout=None,

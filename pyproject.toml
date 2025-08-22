@@ -13,6 +13,7 @@ dependencies = [
     "langchain-openai>=0.3.30",
     "langgraph>=0.6.6",
     "pyyaml>=6.0.2",
+    "datasets>=3.0.1",
     "ragas>=0.3.2",
     "sacrebleu>=2.5.1",
 ]
