@@ -129,7 +129,12 @@ docstring-code-format = true
 skip-magic-trailing-comma = false
 
 [dependency-groups]
-dev = ["ruff>=0.12.7", "yamllint>=1.37.1"]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "ruff>=0.12.7",
+    "yamllint>=1.37.1",
+]
 
 [tool.ruff.lint.mccabe]
 # Set the maximum complexity to 10
