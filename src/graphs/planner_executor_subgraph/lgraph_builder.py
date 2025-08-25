@@ -107,3 +107,18 @@ if __name__ == "__main__":
                     print("Node completed (END)")
 
     asyncio.run(test_planner_executor_subgraph())
+
+    async def planner_executor_subgraph_node(
+        state,
+    ) -> None:
+        """Test the subgraph."""
+        response = await subgraph.ainvoke({"handoff_input": state.get("handoff_input")})
+        print(f"Planner executor response: {response}")
+
+    asyncio.run(
+        planner_executor_subgraph_node(
+            state={
+                "handoff_input": "Call rag, then call react and finally call the reasoner to find the answer."
+            }
+        )
+    )

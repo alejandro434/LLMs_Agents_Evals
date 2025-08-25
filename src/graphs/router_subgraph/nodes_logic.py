@@ -27,7 +27,9 @@ with Path("src/graphs/router_subgraph/handoff-subgraphs.yml").open(
 NextSubgraph = Literal[*SUBGRAPH_NAMES]
 
 
-async def router_node(state: RouterSubgraphState) -> Command[NextSubgraph]:
+async def router_node(
+    state: RouterSubgraphState,
+) -> Command[Literal["planner_executor_subgraph", "router_node"]]:
     """Router node."""
     response = await chain.ainvoke(
         state.get("fallback_reason", "") + state["user_input"]
@@ -53,7 +55,9 @@ if __name__ == "__main__":
 
     async def main():
         """Main function."""
-        state = RouterSubgraphState(user_input="what is the meaning of life?")
+        state = RouterSubgraphState(
+            user_input="Call rag, then call react and finally call the reasoner to find the answer."
+        )
         response = await router_node(state)
         print(response)
 
