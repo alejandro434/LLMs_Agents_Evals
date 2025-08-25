@@ -52,8 +52,8 @@ class RouterOutputSchema(BaseModel):
 class RouterSubgraphState(MessagesState):
     """Router subgraph state."""
 
-    user_input: str = Field(default=str)
-    router_output: RouterOutputSchema = Field(default=RouterOutputSchema)
+    user_input: str = Field(default="")
+    router_output: RouterOutputSchema = Field(default_factory=RouterOutputSchema)
     subgraph_name: NextSubgraph | None = Field(default=None)
     fallback_reason: str | None = Field(default=None)
 

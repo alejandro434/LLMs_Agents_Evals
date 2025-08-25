@@ -31,19 +31,25 @@ async def router_node(
     state: RouterSubgraphState,
 ) -> Command[Literal["planner_executor_subgraph", "router_node"]]:
     """Router node."""
-    response = await chain.ainvoke(
-        state.get("fallback_reason", "") + state["user_input"]
-    )
+    messages = state.get("messages") or []
+    last_text = messages[-1].content if messages else ""
+    user_input = state.get("user_input") or ""
+    fallback_reason = state.get("fallback_reason") or ""
+
+    prompt_text = f"{fallback_reason}{last_text or user_input}"
+
+    response = await chain.ainvoke(prompt_text)
     print(f"Correctness: {response.correctness}")
 
     if not response.correctness:
+        question_text = last_text or user_input
         return Command(
             goto="router_node",
             update={
                 "fallback_reason": (
                     "You did not pass the correctness check in "
                     + getsource(RouterOutputSchema)
-                    + f"Try to answer the following question again: {state['user_input']}."
+                    + (f"Try to answer the following question again: {question_text}.")
                 ),
             },
         )

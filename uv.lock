@@ -435,6 +435,7 @@ dependencies = [
     { name = "ipykernel" },
     { name = "langchain-openai" },
     { name = "langgraph" },
+    { name = "langgraph-cli" },
     { name = "matplotlib" },
     { name = "pyyaml" },
     { name = "ragas" },
@@ -456,6 +457,7 @@ requires-dist = [
     { name = "ipykernel", specifier = ">=6.30.1" },
     { name = "langchain-openai", specifier = ">=0.3.30" },
     { name = "langgraph", specifier = ">=0.6.6" },
+    { name = "langgraph-cli", specifier = ">=0.1.0" },
     { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "ragas", specifier = ">=0.3.2" },
@@ -1156,6 +1158,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/73/3e/d00eb2b56c3846a0cabd2e5aa71c17a95f882d4f799a6ffe96a19b55eba9/langgraph_checkpoint-2.1.1.tar.gz", hash = "sha256:72038c0f9e22260cb9bff1f3ebe5eb06d940b7ee5c1e4765019269d4f21cf92d", size = 136256, upload-time = "2025-07-17T13:07:52.411Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4c/dd/64686797b0927fb18b290044be12ae9d4df01670dce6bb2498d5ab65cb24/langgraph_checkpoint-2.1.1-py3-none-any.whl", hash = "sha256:5a779134fd28134a9a83d078be4450bbf0e0c79fdf5e992549658899e6fc5ea7", size = 43925, upload-time = "2025-07-17T13:07:51.023Z" },
+]
+
+[[package]]
+name = "langgraph-cli"
+version = "0.3.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "langgraph-sdk" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/68/49/03adce8979fd2d4c27f99f25a01df453e487f5052a33a06441cc7a94aa62/langgraph_cli-0.3.8.tar.gz", hash = "sha256:29483adaa5364fc40980b10bbdabe5bf539326243d243c8bb4309c4c84c9da3c", size = 734103, upload-time = "2025-08-21T15:08:35.276Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/63/f822790dd0da7523028b2e0b9a70de5b9131f3bc25c1c09d808af52d7d58/langgraph_cli-0.3.8-py3-none-any.whl", hash = "sha256:e570cd7ed15b52b6eb1fb72ffaba271846f415170292f99a77720d7ddd2eb62f", size = 37213, upload-time = "2025-08-21T15:08:33.768Z" },
 ]
 
 [[package]]
