@@ -6,16 +6,21 @@ uv run -m src.graphs.router_subgraph.evals.eval_router_node
 # %%
 
 import asyncio
+import os
+import random
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import yaml
 from datasets import Dataset
 from ragas import evaluate
 from ragas.metrics import answer_correctness
+from sklearn.metrics import average_precision_score, precision_recall_curve
 
-from src.graphs.router_subgraph.chains import chain
+from src.graphs.llm_chains_factory.assembling import build_structured_chain
+from src.graphs.router_subgraph.chains import SYSTEM_PROMPT, chain
 from src.graphs.router_subgraph.nodes_logic import router_node
-from src.graphs.router_subgraph.schemas import RouterSubgraphState
+from src.graphs.router_subgraph.schemas import RouterOutputSchema, RouterSubgraphState
 
 
 def _compute_classification_metrics(
@@ -163,6 +168,86 @@ async def main() -> None:
                 )
             )
         print("---")
+
+        # --- Precision-Recall curves via sampling-based class scores ---
+        # Build a higher-temperature chain for diversity
+        n_samples = int(os.getenv("ROUTER_PR_SAMPLES", "80"))
+        sample_temperature = float(os.getenv("ROUTER_PR_TEMPERATURE", "0.9"))
+        jitter_eps = float(os.getenv("ROUTER_PR_JITTER", "1e-06"))
+        random.seed(42)
+        sampling_chain = build_structured_chain(
+            system_prompt=SYSTEM_PROMPT,
+            output_schema=RouterOutputSchema,
+            k=5,
+            temperature=sample_temperature,
+            postprocess=None,
+            group="Routing_examples",
+            yaml_path=Path("src/graphs/router_subgraph/fewshots.yml"),
+        )
+
+        # Collect texts corresponding to routing (exclude direct-response)
+        routing_texts: list[str] = []
+        routing_true: list[str] = []
+        for example in examples:
+            expected_output = example.get("output", {})
+            if expected_output.get("next_subgraph") is not None:
+                routing_texts.append(example.get("input", ""))
+                routing_true.append(str(expected_output.get("next_subgraph")))
+
+        # For each routing example, estimate scores per class
+        class_to_scores: dict[str, list[float]] = {cls: [] for cls in classes}
+
+        for text in routing_texts:
+            # Run samples asynchronously
+            tasks = [sampling_chain.ainvoke(text) for _ in range(n_samples)]
+            results = await asyncio.gather(*tasks)
+            counts: dict[str, int] = dict.fromkeys(classes, 0)
+            for r in results:
+                if r.next_subgraph in classes:
+                    counts[str(r.next_subgraph)] += 1
+            for cls in classes:
+                score = counts[cls] / float(n_samples)
+                if jitter_eps > 0:
+                    score = min(1.0, max(0.0, score + random.uniform(0, jitter_eps)))
+                class_to_scores[cls].append(score)
+
+        # Plot per-class PR curves
+        plt.figure(figsize=(9, 6))
+        all_true_bins: list[int] = []
+        all_scores: list[float] = []
+        for cls in classes:
+            y_true_bin = [1 if t == cls else 0 for t in routing_true]
+            y_scores = class_to_scores[cls]
+            if sum(y_true_bin) == 0:
+                continue
+            precision, recall, _ = precision_recall_curve(y_true_bin, y_scores)
+            ap = average_precision_score(y_true_bin, y_scores)
+            plt.step(recall, precision, where="post", label=f"{cls} (AP={ap:.2f})")
+            all_true_bins.extend(y_true_bin)
+            all_scores.extend(y_scores)
+
+        # Micro-averaged PR curve across classes
+        if all_true_bins:
+            m_precision, m_recall, _ = precision_recall_curve(all_true_bins, all_scores)
+            m_ap = average_precision_score(all_true_bins, all_scores)
+            plt.step(
+                m_recall,
+                m_precision,
+                where="post",
+                linewidth=2.0,
+                color="black",
+                label=f"micro-average (AP={m_ap:.2f})",
+            )
+
+        plt.xlabel("Recall")
+        plt.ylabel("Precision")
+        plt.title("Router Subgraph Precision-Recall Curves")
+        plt.legend(loc="lower left")
+        plt.grid(True, alpha=0.3)
+        out_path = Path("router_pr_curve.png")
+        plt.tight_layout()
+        plt.savefig(out_path, dpi=150)
+        print(f"Saved precision-recall curves to {out_path.resolve()}")
 
     # --- Ragas for direct responses ---
     if questions:
