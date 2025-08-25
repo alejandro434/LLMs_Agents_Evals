@@ -38,7 +38,7 @@ if __name__ == "__main__":
         print(f"Goal: {response.goal}")
         for step in response.steps:
             print(f"Instruction: {step.instruction}")
-            print(f"Suggested tool: {step.suggested_tool}")
+            print(f"Suggested subgraph: {step.suggested_subgraph}")
             print(f"Reasoning: {step.reasoning}")
             print(f"Result: {step.result}")
             print(f"Is complete: {step.is_complete}")

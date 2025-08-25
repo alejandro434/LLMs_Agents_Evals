@@ -1,62 +1,50 @@
 FEW_SHOTS_PLANNER:
-  - input: Descripción/resumen de los proyectos de la región de antofagasta
+  - input: Call rag, then call react and finally call the reasoner to find the answer.
   - output: |
-      goal: Escribir una breve descripción/resumen de los proyectos de la región de antofagasta
+      goal: To find the answer to the question
       steps:
-        - Step:
-          instruction: Obtener los nombres de las regiones, para verificar si la región existe y su nombre correcto.
-          suggested_tool: list_regiones
-          reasoning: Se debe verificar si la región existe y como está escrita en la base de datos.
-          result: None
-          is_complete: false
-        - Step:
-          instruction: Si la región existe, obtener los nombres de todos los proyectos de la región.
-          suggested_tool: cypher_query_agent
-          reasoning: Solamente si se verificó que la región existe, se debe obtener los nombres de todos los proyectos de la región.
-          result: None
-          is_complete: false
-        - Step:
-          instruction: Obtener el contenido/resumen/descripcion/principales caracteristicas de cada proyecto.
-          suggested_tool: hybrid_graphRAG_agent
-          reasoning: Dado que se obtuvieron los nombres de los proyectos, se debe obtener el contenido de cada proyecto.
-          result: None
-          is_complete: false
-        - Step:
-          instruction: Escribir una breve descripción/resumen de cada proyecto, con el contenido obtenido.
-          suggested_tool: Reasoning_agent
-          reasoning: Dado que se obtuvieron los nombres de los proyectos y el contenido de cada proyecto, se debe escribir una breve descripción de cada proyecto.
+        - Step
+          instruction: Search for information using the rag.
+          suggested_subgraph: rag_subgraph
+          reasoning: First call the rag subgraph to find the answer to the question.
           result: None
           is_complete: false
 
-      direct_response_to_the_user: None
+        - Step
+          instruction: Call tools using the react prompt.
+          suggested_subgraph: react_subgraph
+          reasoning: Then call the react subgraph to find the answer to the question.
+          result: None
+          is_complete: false
 
-  - input: Lista los proyectos de energía solar en región de coquimbo
+        - Step
+          instruction: Reason on the question.
+          suggested_subgraph: reasoner_subgraph
+          reasoning: Finally call the reasoner subgraph to find the answer to the question.
+          result: None
+          is_complete: false
+
+  - input: Call the reasoner, then call rag and finally call the react to find the answer.
   - output: |
-      goal: Hacer una lista de los proyectos de energía solar en la región de coquimbo
+      goal: To find the answer to the question
       steps:
-        - Step:
-          instruction: Obtener los nombres de las regiones, para verificar si la región existe y su nombre correcto.
-          suggested_tool: list_regiones
-          reasoning: Se debe verificar si la región existe y como está escrita en la base de datos.
-          result: None
-          is_complete: false
-        - Step:
-          instruction: Si la región existe, obtener los nombres de todos los proyectos de la región.
-          suggested_tool: cypher_query_agent
-          reasoning: Solamente si se verificó que la región existe, se debe obtener los nombres de todos los proyectos de la región.
-          result: None
-          is_complete: false
-        - Step:
-          instruction: Buscar en cada proyecto si hay contenido sobre energía solar.
-          suggested_tool: hybrid_graphRAG_agent
-          reasoning: Dado que se obtuvieron los nombres de los proyectos, se debe buscar si hay contenido sobre energía solar.
-          result: None
-          is_complete: false
-        - Step:
-          instruction: Identificar y consolidar los proyectos de energía solar y presentarlos en una lista.
-          suggested_tool: Reasoning_agent
-          reasoning: Dado que se obtuvieron los proyectos de energía solar de la región de coquimbo y el contenido de cada proyecto, se debe identificar y consolidar los proyectos de energía solar y presentarlos en una lista.
+        - Step
+          instruction: Reason on the question.
+          suggested_subgraph: reasoner_subgraph
+          reasoning: First call the reasoner subgraph to find the answer to the question.
           result: None
           is_complete: false
 
-      direct_response_to_the_user: None
+        - Step
+          instruction: Search for information using the rag.
+          suggested_subgraph: rag_subgraph
+          reasoning: Then call the rag subgraph to find the answer to the question.
+          result: None
+          is_complete: false
+
+        - Step
+          instruction: Call tools using the react prompt.
+          suggested_subgraph: react_subgraph
+          reasoning: Finally call the react subgraph to find the answer to the question.
+          result: None
+          is_complete: false

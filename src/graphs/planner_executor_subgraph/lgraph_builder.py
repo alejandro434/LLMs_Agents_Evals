@@ -15,6 +15,11 @@ from src.graphs.planner_executor_subgraph.nodes_logic import executor_node, plan
 from src.graphs.planner_executor_subgraph.schemas import (
     PlannerExecutorSubgraphState,
 )
+from src.graphs.rag_subgraph.lgraph_builder import subgraph as rag_subgraph_compiled
+from src.graphs.ReAct_subgraph.lgraph_builder import subgraph as react_subgraph_compiled
+from src.graphs.reasoner_subgraph.lgraph_builder import (
+    subgraph as reasoner_subgraph_compiled,
+)
 
 
 builder = StateGraph(PlannerExecutorSubgraphState)
@@ -27,8 +32,10 @@ async def rag_subgraph_node(
     state: PlannerExecutorSubgraphState,
 ) -> Command[Literal[END]]:
     """RAG subgraph node."""
-    current_step = state.get("current_step")
-    print(f"Current step: {current_step}")
+    response = await rag_subgraph_compiled.ainvoke(
+        {"current_step": (state.get("current_step"))}
+    )
+    print(f"RAG response: {response}")
 
     return Command(goto=END, update={})
 
@@ -37,8 +44,10 @@ async def react_subgraph_node(
     state: PlannerExecutorSubgraphState,
 ) -> Command[Literal[END]]:
     """React subgraph node."""
-    current_step = state.get("current_step")
-    print(f"Current step: {current_step}")
+    response = await react_subgraph_compiled.ainvoke(
+        {"current_step": (state.get("current_step"))}
+    )
+    print(f"React response: {response}")
 
     return Command(goto=END, update={})
 
@@ -47,8 +56,10 @@ async def reasoner_subgraph_node(
     state: PlannerExecutorSubgraphState,
 ) -> Command[Literal[END]]:
     """Reasoner subgraph node."""
-    current_step = state.get("current_step")
-    print(f"Current step: {current_step}")
+    response = await reasoner_subgraph_compiled.ainvoke(
+        {"current_step": (state.get("current_step"))}
+    )
+    print(f"Reasoner response: {response}")
 
     return Command(goto=END, update={})
 
@@ -69,7 +80,7 @@ if __name__ == "__main__":
     async def test_planner_executor_subgraph() -> None:
         """Test the planner executor subgraph."""
         test_input = {
-            "handoff_input": "Search for information about Python and then analyze it",
+            "handoff_input": "Call rag, then call react and finally call the reasoner to find the answer.",
             "messages": [],
         }
 
@@ -78,7 +89,9 @@ if __name__ == "__main__":
         print("-" * 50)
 
         # Stream through the subgraph to see each step
-        async for chunk in subgraph.astream(test_input, stream_mode="updates"):
+        async for chunk in subgraph.astream(
+            test_input, stream_mode="updates", debug=True
+        ):
             for node_name, node_output in chunk.items():
                 print(f"\nNode: {node_name}")
                 if node_output is not None:

@@ -9,7 +9,9 @@ class Step(BaseModel):
     """A step in the plan."""
 
     instruction: str = Field(description="The instruction to be executed in this step")
-    suggested_agent: str = Field(description="The agent suggested to execute this step")
+    suggested_subgraph: str = Field(
+        description="The subgraph suggested to execute this step"
+    )
     reasoning: str = Field(description="The reasoning for this step")
     result: str = Field(description="The result of the step")
     is_complete: bool = Field(
@@ -46,7 +48,7 @@ if __name__ == "__main__":
         steps=[
             Step(
                 instruction="Find the answer to the question",
-                suggested_agent="search",
+                suggested_subgraph="search",
                 reasoning="I need to search the web to find the answer to the question",
                 result="The answer to the question is 42",
                 is_complete=True,
