@@ -8,7 +8,7 @@ Run with uv (server must be running separately):
 
 Launch the LangGraph dev server for the planner/executor subgraph (from root):
 
-    uv run langgraph dev --config langgraph_server/planner_executor.json
+uv run langgraph dev --config langgraph_server/planner_executor.json
 
 See Also:
 - RemoteGraph reference:

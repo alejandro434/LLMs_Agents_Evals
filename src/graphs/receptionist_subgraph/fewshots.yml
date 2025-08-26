@@ -1,0 +1,436 @@
+Receptionist_user_conversations:
+      - Conversation_history:
+              - human: "Hi, I'm looking for an entry-level retail job."
+              - ai: "Happy to help. What's your name and current address?"
+              - human: "I'm Emily Clark. I live at 221 Pine St, Seattle, WA."
+              - ai: "Thanks, Emily. What's your current employment status?"
+              - human: "Unemployed."
+              - ai: "What was your last job, company, and location?"
+              - human: "Barista at Starbucks in Seattle."
+              - ai: "Any job preferences like schedule, pay, or role type?"
+              - human: "Part-time retail near me, weekends OK."
+        input: "Can you suggest where I should apply first?"
+        output:
+              direct_response_to_the_user: >
+                    Based on your barista experience in Seattle and interest in part-time
+                    retail near 221 Pine St, good first options are Target, Old Navy, and
+                    supermarkets like PCC and Safeway. I can tailor a resume highlighting
+                    cash handling, customer service, and weekend availability. Would you
+                    like me to prioritize Target and Safeway, or add a pharmacy like
+                    Walgreens?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I want a remote software engineering role."
+              - ai: "Great. What's your name and current address?"
+              - human: "Alex Rivera, 1234 Park Ave, San Francisco, CA."
+              - ai: "Employment status?"
+              - human: "Employed, exploring new roles."
+              - ai: "Your last job, company, and location?"
+              - human: "Senior Software Engineer at Atlassian in San Francisco."
+              - ai: "What preferences do you have (stack, salary, location)?"
+              - human: "Backend (Python, Go), remote US, $150k+."
+        input: "What companies should I target next?"
+        output:
+              direct_response_to_the_user: >
+                    Given your senior backend experience in Python and Go with a remote US
+                    preference, target Stripe, Datadog, Notion, Snowflake, and OpenAI. I can
+                    craft bullets on distributed systems and production services at Atlassian.
+                    Should I begin with Stripe and Datadog, or add Snowflake platform teams?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm seeking a hospital nursing job."
+              - ai: "What's your name and current address?"
+              - human: "Anna Patel, 3400 N Clark St, Chicago, IL."
+              - ai: "Employment status?"
+              - human: "Unemployed."
+              - ai: "Last job, company, and location?"
+              - human: "Registered Nurse at Northwestern Memorial Hospital, Chicago."
+              - ai: "Preferences (shift, unit, pay)?"
+              - human: "Day shift, med-surg or telemetry, full-time."
+        input: "Can you recommend openings I should look at?"
+        output:
+              direct_response_to_the_user: >
+                    For day-shift med-surg/telemetry in Chicago, check Northwestern Medicine,
+                    Rush, and Advocate Aurora. I can tune your resume around telemetry
+                    monitoring, EMR proficiency, and patient ratios. Should I prioritize
+                    Northwestern first and set alerts for Rush and Advocate?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "Looking for full-time warehouse work."
+              - ai: "Name and current address?"
+              - human: "Jose Martinez, 512 W Roosevelt St, Phoenix, AZ."
+              - ai: "Employment status?"
+              - human: "Employed part-time."
+              - ai: "Last job, company, and location?"
+              - human: "Forklift operator at Amazon in Phoenix."
+              - ai: "Preferences (shift, pay, commute)?"
+              - human: "Full-time nights, within 30 minutes."
+        input: "Where should I apply?"
+        output:
+              direct_response_to_the_user: >
+                    With recent forklift experience in Phoenix and a night-shift preference,
+                    apply to Amazon Sort Centers, FedEx Ground, UPS, and 3PLs like XPO. I can
+                    highlight OSHA safety, palletization, and PIT certification on your
+                    resume. Shall I start with Amazon and FedEx Ground?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm a teacher looking for a new role."
+              - ai: "Name and current address?"
+              - human: "Maria Gomez, 801 Biscayne Blvd, Miami, FL."
+              - ai: "Employment status?"
+              - human: "Self-employed tutor."
+              - ai: "Last job, company, and location?"
+              - human: "Middle school math teacher at Miami-Dade County Public Schools."
+              - ai: "Preferences (school type, pay, grades)?"
+              - human: "Charter schools, 6–8th grade, $60k+."
+        input: "Any schools you'd suggest I target?"
+        output:
+              direct_response_to_the_user: >
+                    Given your math background in Miami and charter preference, consider KIPP
+                    Miami, Somerset Academy, and Mater Academy. I can emphasize outcomes (test
+                    score gains) and classroom management. Should I prepare versions of your
+                    resume for KIPP and Somerset first?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm a graphic designer seeking remote roles."
+              - ai: "Name and current address?"
+              - human: "Liam O'Connor, 900 Congress Ave, Austin, TX."
+              - ai: "Employment status?"
+              - human: "Unemployed."
+              - ai: "Last job, company, and location?"
+              - human: "Junior Designer at Canva in Sydney."
+              - ai: "Preferences (industry, tools, schedule)?"
+              - human: "Brand design, Figma/Adobe, fully remote."
+        input: "Where should I apply first?"
+        output:
+              direct_response_to_the_user: >
+                    For remote brand design, target Figma, Zapier, Shopify, and GitLab. I can
+                    showcase your Canva projects, component libraries, and accessibility work.
+                    Want me to draft a portfolio email for Figma and Shopify?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm retired and want part-time consulting."
+              - ai: "Name and current address?"
+              - human: "John Lee, 1200 5th Ave, Seattle, WA."
+              - ai: "Employment status?"
+              - human: "Retired."
+              - ai: "Last job, company, and location?"
+              - human: "Project Manager at Boeing in Seattle."
+              - ai: "Preferences (hours, domain, hybrid/remote)?"
+              - human: "10–15 hrs/week, aerospace ops, hybrid."
+        input: "What opportunities should I consider?"
+        output:
+              direct_response_to_the_user: >
+                    You're a strong fit for fractional PM work with aerospace suppliers, MRO
+                    shops, and consultancies like Alvarez & Marsal. I can position your Boeing
+                    experience toward process improvement and vendor coordination. Should I
+                    start outreach to three Seattle suppliers?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "Looking for construction carpentry work."
+              - ai: "Name and current address?"
+              - human: "Ahmed Hassan, 1440 Blake St, Denver, CO."
+              - ai: "Employment status?"
+              - human: "Unemployed."
+              - ai: "Last job, company, and location?"
+              - human: "Carpenter at PCL Construction in Denver."
+              - ai: "Preferences (union, travel, pay)?"
+              - human: "Union jobs, local sites, prevailing wage."
+        input: "Any leads you'd recommend?"
+        output:
+              direct_response_to_the_user: >
+                    Check union halls (Carpenters Local) and contractors like Mortenson and JE
+                    Dunn in Denver. I can tune your resume for framing, finish carpentry, and
+                    OSHA-10. Want me to pull current bids and apprenticeships to target?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm exploring tech sales roles."
+              - ai: "Name and current address?"
+              - human: "Priya Shah, 88 Pine St, New York, NY."
+              - ai: "Employment status?"
+              - human: "Employed."
+              - ai: "Last job, company, and location?"
+              - human: "Sales Associate at Best Buy in Queens."
+              - ai: "Preferences (SaaS/retail, OTE, territory)?"
+              - human: "SaaS SDR, NYC, $90k+ OTE."
+        input: "Which companies are good targets?"
+        output:
+              direct_response_to_the_user: >
+                    For NYC SaaS SDR roles, target HubSpot, Outreach, Datadog, and MongoDB. I
+                    can stress customer discovery from Best Buy and pipeline discipline. Should
+                    I start with HubSpot and Datadog applications?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm seeking a data analyst position."
+              - ai: "Name and current address?"
+              - human: "Chen Wu, 77 Massachusetts Ave, Boston, MA."
+              - ai: "Employment status?"
+              - human: "Unemployed."
+              - ai: "Last job, company, and location?"
+              - human: "Analyst at Fidelity in Boston."
+              - ai: "Preferences (tools, hybrid/remote, industry)?"
+              - human: "SQL/Python/Tableau, hybrid, fintech."
+        input: "Where should I apply?"
+        output:
+              direct_response_to_the_user: >
+                    Apply to Fidelity, State Street, Capital One, and Klarna analytics teams. I
+                    will highlight cohort analysis, SQL performance tuning, and dashboards.
+                    Would you like me to focus on Capital One and Fidelity first?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "Looking for hospitality front-desk jobs."
+              - ai: "Name and current address?"
+              - human: "Sofia Rossi, 2000 Sunset Blvd, Los Angeles, CA."
+              - ai: "Employment status?"
+              - human: "Unemployed."
+              - ai: "Last job, company, and location?"
+              - human: "Server at Olive Garden in Los Angeles."
+              - ai: "Preferences (shift, hotel size, benefits)?"
+              - human: "Front desk, mid-size hotels, evenings."
+        input: "What should I do next?"
+        output:
+              direct_response_to_the_user: >
+                    Target Hilton Garden Inn, Courtyard Marriott, and boutique hotels in
+                    Hollywood. I'll emphasize customer service, POS, and conflict resolution
+                    from your server role. Shall I start with Hilton Garden Inn and one
+                    boutique property?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm seeking manufacturing assembly work."
+              - ai: "Name and current address?"
+              - human: "Peter Novak, 1500 Michigan Ave, Detroit, MI."
+              - ai: "Employment status?"
+              - human: "Self-employed."
+              - ai: "Last job, company, and location?"
+              - human: "Auto mechanic at Ford in Dearborn."
+              - ai: "Preferences (shift, union, commute)?"
+              - human: "Day shift, union, within 25 minutes."
+        input: "Any recommendations?"
+        output:
+              direct_response_to_the_user: >
+                    Apply to Ford, Stellantis, and Magna plants near Dearborn. I can emphasize
+                    torque specs, quality checks, and safety. Want me to queue applications for
+                    Ford and Magna first?
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm in Rockville, MD and looking for biotech QA roles."
+              - ai: "What's your name and current address?"
+              - human: "Nina Park, 200 Monroe St, Rockville, MD."
+              - ai: "Employment status?"
+              - human: "Employed on a contract."
+              - ai: "Last job and preferences?"
+              - human: "QA tech at a small lab; full-time, day shift."
+        input: "Which Maryland programs and companies fit biotech/healthcare?"
+        output:
+              direct_response_to_the_user: >
+                    Start with Maryland Workforce Exchange (MWE) for openings and EARN Maryland
+                    for training grants. Consider Johns Hopkins Medicine labs and Baltimore-area
+                    research facilities hiring QA and lab operations roles.
+
+                    Resources (Maryland):
+                    {RESOURCES_IN_MARYLAND}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm in Annapolis, MD seeking hospitality corporate roles."
+              - ai: "Name and current address?"
+              - human: "Elena Ruiz, 99 Main St, Annapolis, MD."
+              - ai: "Employment status and preferences?"
+              - human: "Employed; open to corporate ops, hybrid."
+        input: "Any Maryland initiatives or companies I should focus on?"
+        output:
+              direct_response_to_the_user: >
+                    Use MWE for job search and EARN Maryland for industry-led pathways. Marriott
+                    International (HQ in Bethesda) posts corporate roles across operations, HR, and
+                    finance that align with hospitality experience.
+
+                    Resources (Maryland):
+                    {RESOURCES_IN_MARYLAND}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "From Linthicum, MD—interested in entry-level defense manufacturing."
+              - ai: "What's your name and current address?"
+              - human: "Trevor Bell, 800 Nursery Rd, Linthicum, MD."
+              - ai: "Employment status and shift?"
+              - human: "Unemployed; open to shifts."
+        input: "What Maryland programs and companies fit defense manufacturing?"
+        output:
+              direct_response_to_the_user: >
+                    Check the Apprenticeship and Training Program (MATP) and EARN Maryland for
+                    hands-on pathways. Northrop Grumman (Linthicum) regularly hires for assembly
+                    and manufacturing tech roles.
+
+                    Resources (Maryland):
+                    {RESOURCES_IN_MARYLAND}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm in Arlington, VA exploring cybersecurity and consulting."
+              - ai: "Name and current address?"
+              - human: "James Patel, 1100 Wilson Blvd, Arlington, VA."
+              - ai: "Employment status and interests?"
+              - human: "Employed; moving toward cyber/analytics consulting."
+        input: "Which Virginia programs and employers should I target?"
+        output:
+              direct_response_to_the_user: >
+                    Use Virginia Career Works for coaching and job matching, and FastForward for
+                    short-term security credential courses. Employers near Arlington include Booz
+                    Allen Hamilton for cyber/analytics consulting roles.
+
+                    Resources (Virginia):
+                    {RESOURCES_IN_VIRGINIA}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "Hello from Alexandria, VA—marketing/analytics corporate roles interest me."
+              - ai: "What's your name and current address?"
+              - human: "Rachel Green, 300 King St, Alexandria, VA."
+              - ai: "Employment status and preferences?"
+              - human: "Employed; hybrid preferred."
+        input: "Any Virginia state programs and companies you'd suggest?"
+        output:
+              direct_response_to_the_user: >
+                    Start with Virginia Career Works and consider G3/FastForward if you want a
+                    credential boost. Target Capital One in McLean for product/marketing analytics
+                    and Booz Allen for analytics consulting.
+
+                    Resources (Virginia):
+                    {RESOURCES_IN_VIRGINIA}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "From Norfolk, VA—seeking energy/utilities field roles."
+              - ai: "Name and current address?"
+              - human: "Andre Collins, 500 E Main St, Norfolk, VA."
+              - ai: "Employment status and schedule?"
+              - human: "Unemployed; full-time."
+        input: "Which Virginia programs and employers fit energy/utilities?"
+        output:
+              direct_response_to_the_user: >
+                    Use Virginia Career Works for placement support and FastForward for utility
+                    technician credentials. Dominion Energy is a strong employer statewide; in
+                    Hampton Roads, also keep an eye on roles at HII facilities.
+
+                    Resources (Virginia):
+                    {RESOURCES_IN_VIRGINIA}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "Hi! I'm in Baltimore, MD and looking for job programs."
+              - ai: "Great—what's your name and current address?"
+              - human: "Dana Brooks, 1200 Light St, Baltimore, MD."
+              - ai: "Employment status?"
+              - human: "Unemployed."
+              - ai: "Last job and preferences?"
+              - human: "Retail associate; interested in training and local employers."
+        input: "What Maryland programs or companies should I look at?"
+        output:
+              direct_response_to_the_user: >
+                    For Maryland resources and employers near Baltimore, start with the Maryland
+                    Workforce Exchange (MWE), EARN Maryland training, and the Apprenticeship and
+                    Training Program. Local employers to watch include Under Armour and Johns
+                    Hopkins Medicine.
+
+                    Resources (Maryland):
+                    {RESOURCES_IN_MARYLAND}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "Hello from Bethesda, MD—seeking education admin roles."
+              - ai: "What's your name and address?"
+              - human: "Laura Kim, 7000 Wisconsin Ave, Bethesda, MD."
+              - ai: "Employment status and preferences?"
+              - human: "Employed, open to transitions; education admin or hospitality corp."
+        input: "Any state initiatives or companies in Maryland I should focus on?"
+        output:
+              direct_response_to_the_user: >
+                    Check EARN Maryland for industry-led training and MWE for openings. For
+                    companies in Maryland aligned with your background, look at Marriott (HQ in
+                    Bethesda) for corporate roles and Under Armour (Baltimore) for operations and
+                    admin.
+
+                    Resources (Maryland):
+                    {RESOURCES_IN_MARYLAND}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "Hey—I'm in Richmond, VA looking for programs to upskill."
+              - ai: "Name and current address?"
+              - human: "Marcus Allen, 300 E Broad St, Richmond, VA."
+              - ai: "Employment status and interests?"
+              - human: "Unemployed; interested in energy ops or field tech roles."
+        input: "Which Virginia programs and employers should I target?"
+        output:
+              direct_response_to_the_user: >
+                    In Virginia, start with Virginia Career Works for job services and G3/FastForward
+                    for short-term credential funding. Employers to watch in Richmond include
+                    Dominion Energy and regional contractors hiring field techs.
+
+                    Resources (Virginia):
+                    {RESOURCES_IN_VIRGINIA}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "Hi from McLean, VA—I'm exploring tech and consulting."
+              - ai: "What's your name and current address?"
+              - human: "Ravi Shah, 1600 Chain Bridge Rd, McLean, VA."
+              - ai: "Employment status and preferences?"
+              - human: "Employed; open to product or analytics, hybrid OK."
+        input: "Any Virginia state programs and target companies you'd suggest?"
+        output:
+              direct_response_to_the_user: >
+                    Use Virginia Career Works for coaching and job matching, plus FastForward for
+                    credential courses if you want to bolster analytics skills. Nearby employers to
+                    target include Capital One (data/product) and Booz Allen Hamilton (consulting,
+                    analytics).
+
+                    Resources (Virginia):
+                    {RESOURCES_IN_VIRGINIA}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "I'm in Silver Spring, MD—interested in apprenticeships in the trades."
+              - ai: "Name and current address?"
+              - human: "Kevin Ortiz, 8500 Colesville Rd, Silver Spring, MD."
+              - ai: "Employment status and shift preferences?"
+              - human: "Unemployed; day shift preferred, union OK."
+        input: "What Maryland apprenticeship options and employers should I check?"
+        output:
+              direct_response_to_the_user: >
+                    Explore Maryland's Apprenticeship and Training Program (MATP) and EARN Maryland
+                    pathways for entry into skilled trades. In the Baltimore–DC corridor, look at
+                    Northrop Grumman for entry-level manufacturing/assembly and facility roles.
+
+                    Resources (Maryland):
+                    {RESOURCES_IN_MARYLAND}
+              handoff_needed: false
+
+      - Conversation_history:
+              - human: "From Newport News, VA—I'd like shipbuilding apprenticeships."
+              - ai: "Name and current address?"
+              - human: "Aisha Carter, 1001 Jefferson Ave, Newport News, VA."
+              - ai: "Employment status and schedule?"
+              - human: "Unemployed; full-time."
+        input: "Which Virginia programs and companies fit shipbuilding/trades?"
+        output:
+              direct_response_to_the_user: >
+                    Use Virginia Registered Apprenticeships and FastForward for credential support.
+                    Huntington Ingalls (Newport News Shipbuilding) is a prime employer for
+                    apprenticeships and skilled trades locally.
+
+                    Resources (Virginia):
+                    {RESOURCES_IN_VIRGINIA}
+              handoff_needed: false

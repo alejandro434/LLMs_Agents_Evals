@@ -1,26 +1,147 @@
 TARGET_LLM_CHAIN_1:
-    - input: "Numero de proyectos"
-    - output: |
-          MATCH (p:Proyecto)
-          RETURN COUNT(p) AS total_proyectos
-    - input: "Nombres de los proyectos"
-    - output: |
-          MATCH (p:Proyecto)
-          RETURN p.nombre AS nombre_proyecto
-    - input: "Fecha de presentación de los proyectos"
-    - output: |
-          MATCH (p:Proyecto)
-          RETURN p.fecha_presentacion AS fecha_presentacion
+        - Conversation_history:
+                  - human: "I'm in Arlington, VA exploring cybersecurity and consulting."
+                  - ai: "Name and current address?"
+                  - human: "James Patel, 1100 Wilson Blvd, Arlington, VA."
+                  - ai: "Employment status and interests?"
+                  - human: "Employed; moving toward cyber/analytics consulting."
+          input: "Which Virginia programs and employers should I target?"
+          output:
+                  direct_response_to_the_user: >
+                          Use Virginia Career Works for coaching and job matching, and FastForward for
+                          short-term security credential courses. Employers near Arlington include Booz
+                          Allen Hamilton for cyber/analytics consulting roles.
+                  handoff_needed: false
+
+        - Conversation_history:
+                  - human: "Hello from Alexandria, VA—marketing/analytics corporate roles interest me."
+                  - ai: "What's your name and current address?"
+                  - human: "Rachel Green, 300 King St, Alexandria, VA."
+                  - ai: "Employment status and preferences?"
+                  - human: "Employed; hybrid preferred."
+          input: "Any Virginia state programs and companies you'd suggest?"
+          output:
+                  direct_response_to_the_user: >
+                          Start with Virginia Career Works and consider G3/FastForward if you want a
+                          credential boost. Target Capital One in McLean for product/marketing analytics
+                          and Booz Allen for analytics consulting.
+                  handoff_needed: false
+
+        - Conversation_history:
+                  - human: "From Norfolk, VA—seeking energy/utilities field roles."
+                  - ai: "Name and current address?"
+                  - human: "Andre Collins, 500 E Main St, Norfolk, VA."
+                  - ai: "Employment status and schedule?"
+                  - human: "Unemployed; full-time."
+          input: "Which Virginia programs and employers fit energy/utilities?"
+          output:
+                  direct_response_to_the_user: >
+                          Use Virginia Career Works for placement support and FastForward for utility
+                          technician credentials. Dominion Energy is a strong employer statewide; in
+                          Hampton Roads, also keep an eye on roles at HII facilities.
+                  handoff_needed: false
+
+        - Conversation_history:
+                  - human: "Hey—I'm in Richmond, VA looking for programs to upskill."
+                  - ai: "Name and current address?"
+                  - human: "Marcus Allen, 300 E Broad St, Richmond, VA."
+                  - ai: "Employment status and interests?"
+                  - human: "Unemployed; interested in energy ops or field tech roles."
+          input: "Which Virginia programs and employers should I target?"
+          output:
+                  direct_response_to_the_user: >
+                          In Virginia, start with Virginia Career Works for job services and G3/FastForward
+                          for short-term credential funding. Employers to watch in Richmond include
+                          Dominion Energy and regional contractors hiring field techs.
+                  handoff_needed: false
+
+        - Conversation_history:
+                  - human: "From Newport News, VA—I'd like shipbuilding apprenticeships."
+                  - ai: "Name and current address?"
+                  - human: "Aisha Carter, 1001 Jefferson Ave, Newport News, VA."
+                  - ai: "Employment status and schedule?"
+                  - human: "Unemployed; full-time."
+          input: "Which Virginia programs and companies fit shipbuilding/trades?"
+          output:
+                  direct_response_to_the_user: >
+                          Use Virginia Registered Apprenticeships and FastForward for credential support.
+                          Huntington Ingalls (Newport News Shipbuilding) is a prime employer for
+                          apprenticeships and skilled trades locally.
+                  handoff_needed: false
+
 TARGET_LLM_CHAIN_2:
-    - input: "Numero de proyectos"
-    - output: |
-          MATCH (p:Proyecto)
-          RETURN COUNT(p) AS total_proyectos
-    - input: "Nombres de los proyectos"
-    - output: |
-          MATCH (p:Proyecto)
-          RETURN p.nombre AS nombre_proyecto
-    - input: "Fecha de presentación de los proyectos"
-    - output: |
-          MATCH (p:Proyecto)
-          RETURN p.fecha_presentacion AS fecha_presentacion
+        - Conversation_history:
+                  - human: "I'm in Rockville, MD and looking for biotech QA roles."
+                  - ai: "What's your name and current address?"
+                  - human: "Nina Park, 200 Monroe St, Rockville, MD."
+                  - ai: "Employment status?"
+                  - human: "Employed on a contract."
+                  - ai: "Last job and preferences?"
+                  - human: "QA tech at a small lab; full-time, day shift."
+          input: "Which Maryland programs and companies fit biotech/healthcare?"
+          output:
+                  direct_response_to_the_user: >
+                          Start with Maryland Workforce Exchange (MWE) for openings and EARN Maryland
+                          for training grants. Consider Johns Hopkins Medicine labs and Baltimore-area
+                          research facilities hiring QA and lab operations roles.
+                  handoff_needed: false
+
+        - Conversation_history:
+                  - human: "I'm in Annapolis, MD seeking hospitality corporate roles."
+                  - ai: "Name and current address?"
+                  - human: "Elena Ruiz, 99 Main St, Annapolis, MD."
+                  - ai: "Employment status and preferences?"
+                  - human: "Employed; open to corporate ops, hybrid."
+          input: "Any Maryland initiatives or companies I should focus on?"
+          output:
+                  direct_response_to_the_user: >
+                          Use MWE for job search and EARN Maryland for industry-led pathways. Marriott
+                          International (HQ in Bethesda) posts corporate roles across operations, HR, and
+                          finance that align with hospitality experience.
+                  handoff_needed: false
+
+        - Conversation_history:
+                  - human: "From Linthicum, MD—interested in entry-level defense manufacturing."
+                  - ai: "What's your name and current address?"
+                  - human: "Trevor Bell, 800 Nursery Rd, Linthicum, MD."
+                  - ai: "Employment status and shift?"
+                  - human: "Unemployed; open to shifts."
+          input: "What Maryland programs and companies fit defense manufacturing?"
+          output:
+                  direct_response_to_the_user: >
+                          Check the Apprenticeship and Training Program (MATP) and EARN Maryland for
+                          hands-on pathways. Northrop Grumman (Linthicum) regularly hires for assembly
+                          and manufacturing tech roles.
+                  handoff_needed: false
+
+        - Conversation_history:
+                  - human: "Hi! I'm in Baltimore, MD and looking for job programs."
+                  - ai: "Great—what's your name and current address?"
+                  - human: "Dana Brooks, 1200 Light St, Baltimore, MD."
+                  - ai: "Employment status?"
+                  - human: "Unemployed."
+                  - ai: "Last job and preferences?"
+                  - human: "Retail associate; interested in training and local employers."
+          input: "What Maryland programs or companies should I look at?"
+          output:
+                  direct_response_to_the_user: >
+                          For Maryland resources and employers near Baltimore, start with the Maryland
+                          Workforce Exchange (MWE), EARN Maryland training, and the Apprenticeship and
+                          Training Program. Local employers to watch include Under Armour and Johns
+                          Hopkins Medicine.
+                  handoff_needed: false
+
+        - Conversation_history:
+                  - human: "Hello from Bethesda, MD—seeking education admin roles."
+                  - ai: "What's your name and address?"
+                  - human: "Laura Kim, 7000 Wisconsin Ave, Bethesda, MD."
+                  - ai: "Employment status and preferences?"
+                  - human: "Employed, open to transitions; education admin or hospitality corp."
+          input: "Any state initiatives or companies in Maryland I should focus on?"
+          output:
+                  direct_response_to_the_user: >
+                          Check EARN Maryland for industry-led training and MWE for openings. For
+                          companies in Maryland aligned with your background, look at Marriott (HQ in
+                          Bethesda) for corporate roles and Under Armour (Baltimore) for operations and
+                          admin.
+                  handoff_needed: false

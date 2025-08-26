@@ -6,11 +6,17 @@ uv run python src/graphs/llm_chains_factory/dynamic_fewshots.py
 # %%
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import yaml
 from dotenv import load_dotenv
 from langchain_core.example_selectors import SemanticSimilarityExampleSelector
-from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    FewShotChatMessagePromptTemplate,
+    MessagesPlaceholder,
+)
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
 
@@ -22,26 +28,133 @@ DEFAULT_FEWSHOTS_PATH = Path(__file__).parent / "test_fewshots.yaml"
 
 
 def _transform_sequential_pairs(
-    items: list[dict[str, str]],
-) -> list[dict[str, str]]:
-    """Transform a list of sequential {'input': v1}, {'output': v2} pairs into {'input': v1, 'output': v2}.
+    items: list[dict],
+) -> list[dict]:
+    """Transform sequential input/output pairs while preserving combined items.
 
-    Handles cases where keys are missing or the list has an odd length.
+    - If an item already contains both 'input' and 'output', keep it as-is
+      (including any extra keys like 'Conversation_history').
+    - Otherwise, pair {'input': ...} followed by {'output': ...} into one dict.
+    - Skip incomplete or malformed entries safely.
     """
-    transformed = []
-    i = 0
-    while i < len(items) - 1:
-        item1 = items[i]
-        item2 = items[i + 1]
-        # Heuristic: check if the first item has 'input' and the second has 'output'
-        if "input" in item1 and "output" in item2:
-            transformed.append({"input": item1["input"], "output": item2["output"]})
-            i += 2  # Move to the next pair
-        else:
-            # If the pattern is broken, handle individually (or skip)
-            # For now, we just advance by one to allow recovery
-            i += 1
+    transformed: list[dict] = []
+    index = 0
+    n = len(items)
+    while index < n:
+        item1 = items[index]
+        if not isinstance(item1, dict):  # Skip non-dict items defensively
+            index += 1
+            continue
+        # Preserve combined items (may include Conversation_history)
+        if "input" in item1 and "output" in item1:
+            transformed.append(item1)
+            index += 1
+            continue
+        # Try to pair with the next item
+        if "input" in item1 and index + 1 < n:
+            item2 = items[index + 1]
+            if isinstance(item2, dict) and "output" in item2:
+                transformed.append(
+                    {
+                        "input": item1.get("input", ""),
+                        "output": item2.get("output", ""),
+                    }
+                )
+                index += 2
+                continue
+        # Fallback: advance by one to allow recovery
+        index += 1
     return transformed
+
+
+def _coerce_output_text(value: Any) -> str:
+    """Convert arbitrary YAML 'output' values to a reasonable text string.
+
+    - If the value is a mapping, prefer well-known text fields.
+    - Fall back to YAML-dumping the structure for stability.
+    """
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, dict):
+        # Prefer common text-bearing fields
+        for key in (
+            "direct_response_to_the_user",
+            "answer",
+            "text",
+            "response",
+            "next_subgraph",
+        ):
+            if key in value and value[key] is not None:
+                text = str(value[key]).strip()
+                if text:
+                    return text
+        # Fallback: stable textual form
+        try:
+            dumped = yaml.safe_dump(value, sort_keys=True)
+            return str(dumped).strip()
+        except Exception:  # pragma: no cover
+            return str(value)
+    return str(value).strip()
+
+
+def render_examples_for_system(examples: list[dict]) -> str:
+    """Render selected examples as a formatted system block.
+
+    Format:
+        Example N:
+        Conversation_history:
+            - human: ...
+            - ai: ...
+        - input:
+            ...
+        - output:
+            ...
+        - direct_response_to_the_user:
+            ...
+        - handoff_needed:
+            ...
+        ----------------------------------------
+    """
+    lines: list[str] = []
+    for idx, ex in enumerate(examples, start=1):
+        lines.append(f"Example {idx}:")
+        lines.append("Conversation_history:")
+
+        history = ex.get("history", [])
+        for turn in history:
+            # Support BaseMessage or dict turns
+            role = None
+            content = ""
+            if isinstance(turn, (HumanMessage, AIMessage)):
+                role = "human" if isinstance(turn, HumanMessage) else "ai"
+                content = str(getattr(turn, "content", ""))
+            elif isinstance(turn, dict):
+                if "human" in turn:
+                    role = "human"
+                    content = str(turn.get("human", ""))
+                elif "ai" in turn:
+                    role = "ai"
+                    content = str(turn.get("ai", ""))
+            if role:
+                lines.append(f"    - {role}:")
+                for line in str(content).splitlines() or [""]:
+                    lines.append(f"        {line}")
+
+        def _blk(label: str, value: str) -> None:
+            lines.append(f"- {label}:")
+            for line in str(value).splitlines() or [""]:
+                lines.append(f"    {line}")
+
+        _blk("input", str(ex.get("input", "")))
+        output_text = str(ex.get("output", ""))
+        _blk(
+            "direct_response_to_the_user",
+            str(ex.get("direct_response_to_the_user", output_text)),
+        )
+        _blk("handoff_needed", str(ex.get("handoff_needed", "")))
+        lines.append("----------------------------------------")
+
+    return "\n".join(lines)
 
 
 def create_dynamic_fewshooter(
@@ -166,23 +279,66 @@ def create_dynamic_fewshooter(
         )
     source_input_key, source_output_key = best_pair
 
-    # Build normalized examples; skip incomplete ones
-    examples = [
-        {
-            "input": str(it[source_input_key]).strip(),
-            "output": str(it[source_output_key]).strip(),
-        }
-        for it in rows
-        if source_input_key in it
-        and source_output_key in it
-        and str(it[source_input_key]).strip()
-        and str(it[source_output_key]).strip()
-    ]
+    # Build normalized examples; include optional Conversation_history
+    examples: list[dict] = []
+    for it in rows:
+        if (
+            source_input_key in it
+            and source_output_key in it
+            and str(it[source_input_key]).strip()
+            and str(it[source_output_key]).strip()
+        ):
+            history_msgs: list[BaseMessage] = []
+            conv = it.get("Conversation_history")
+            if isinstance(conv, list):
+                for turn in conv:
+                    if not isinstance(turn, dict):
+                        continue
+                    if "human" in turn:
+                        history_msgs.append(
+                            HumanMessage(content=str(turn.get("human", "")))
+                        )
+                    if "ai" in turn:
+                        history_msgs.append(AIMessage(content=str(turn.get("ai", ""))))
+            # Extract and normalize output + flags
+            output_obj = it.get(source_output_key)
+            direct_text = _coerce_output_text(output_obj)
+            handoff_needed_val: str = ""
+            if isinstance(output_obj, dict):
+                hn = output_obj.get("handoff_needed", None)
+                if hn is not None:
+                    handoff_needed_val = str(hn)
+
+            # Pre-render history as plain text for system injection
+            history_text = "\n".join(
+                [
+                    (
+                        ("human: " + m.content)
+                        if isinstance(m, HumanMessage)
+                        else ("ai: " + m.content)
+                    )
+                    for m in history_msgs
+                    if getattr(m, "content", "")
+                ]
+            )
+
+            examples.append(
+                {
+                    "input": str(it[source_input_key]).strip(),
+                    "output": direct_text,
+                    "direct_response_to_the_user": direct_text,
+                    "handoff_needed": handoff_needed_val,
+                    # Always include history key for template stability
+                    "history": history_msgs,
+                    "history_text": history_text,
+                }
+            )
     if not examples:
         raise ValueError(f"No valid examples after normalization from: {yaml_path}")
 
     # Prepare texts to vectorize (explicit order for stability)
-    to_vectorize = [f"{ex['input']}\n{ex['output']}" for ex in examples]
+    # Vectorize only the user's question (input) for similarity matching
+    to_vectorize = [ex["input"] for ex in examples]
 
     # Initialize embeddings with robust fallback
     embeddings = None
@@ -216,9 +372,18 @@ def create_dynamic_fewshooter(
         input_variables=[selector_input_variable],
         example_selector=example_selector,
         # Define how each example will be formatted.
-        # In this case, each example will become 2 messages: 1 human, and 1 ai
+        # Each example injects full context into a system segment, then replays
+        # the history and the input/output as chat messages.
         example_prompt=ChatPromptTemplate.from_messages(
-            [("human", "{input}"), ("ai", "{output}")]
+            [
+                (
+                    "system",
+                    "handoff_needed: {handoff_needed}",
+                ),
+                MessagesPlaceholder(variable_name="history"),
+                ("human", "{input}"),
+                ("ai", "{output}"),
+            ]
         ),
     )
 
