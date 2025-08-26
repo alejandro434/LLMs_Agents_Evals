@@ -5,7 +5,7 @@ as a LangGraph server.
 """
 
 # %%
-from langraph_server.graph import graph
+from langgraph_server.graph import graph
 
 
 __all__ = ["graph"]

@@ -7,7 +7,7 @@ for the BuildWithin Evals project.
 
 1. **Environment Variables**: Copy the example environment file and configure it:
    ```bash
-   cp langraph_server/env.example .env
+   cp langgraph_server/env.example .env
    ```
 
    Then edit `.env` in the root directory and add your API keys:
@@ -25,39 +25,83 @@ for the BuildWithin Evals project.
 
 ### Option 1: Using uv run with LangGraph CLI (Recommended)
 
-From the **root of the repository**, run:
+From the **root of the repository**, choose one config below to launch a specific
+graph:
 
 ```bash
-uv run langgraph dev --config langraph_server/langgraph.json
+# Router (default). Equivalent to langgraph_server/langgraph.json
+uv run langgraph dev --config langgraph_server/router.json
+
+# Planner/Executor subgraph
+uv run langgraph dev --config langgraph_server/planner_executor.json
+
+# RAG subgraph
+uv run langgraph dev --config langgraph_server/rag.json
+
+# ReAct subgraph
+uv run langgraph dev --config langgraph_server/react.json
+
+# Reasoner subgraph
+uv run langgraph dev --config langgraph_server/reasoner.json
 ```
 
-This will start the LangGraph development server with the router subgraph exposed.
+The original `langgraph_server/langgraph.json` also launches the router subgraph.
 
 ### Option 2: Using the Launch Script
 
 Run the provided launch script from the root:
 
 ```bash
-./langraph_server/launch.sh
+./langgraph_server/launch.sh
 ```
 
 This script will:
 - Check you're in the root directory
 - Ensure dependencies are synced
 - Create .env from template if needed
-- Launch the server using uv run
+- Launch the server using uv run with the router config
 
 ### Option 3: Using LangGraph Studio
 
 1. Open LangGraph Studio
 2. Navigate to the root of the repository
-3. Select the `langraph_server/langgraph.json` configuration file
-4. The studio will automatically load the router subgraph
+3. Select any config under `langgraph_server/` (e.g., `router.json`, `rag.json`)
+4. The studio will automatically load the corresponding subgraph
+
+### Programmatic smoke test using RemoteGraph
+
+Use the helper script to call a running subgraph with a schema-valid payload:
+
+```bash
+uv run AWARE/agent-evals/subgraph_evals.py \
+  --graph rag_graph
+```
+
+Notes:
+- Start a subgraph server first, e.g.:
+  - `uv run langgraph dev --config langgraph_server/rag.json`
+  - Or pick any other config in `langgraph_server/` and set `--graph` to its id
+- Docs: [RemoteGraph reference](https://langchain-ai.github.io/langgraph/reference/remote_graph/),
+  [Use a remote graph](https://docs.langchain.com/langgraph-platform/use-remote-graph),
+  [JS how-to](https://langchain-ai.github.io/langgraphjs/how-tos/use-remote-graph/)
 
 ## Graph Architecture
 
-The deployed graph is the compiled `subgraph` from
-`src/graphs/router_subgraph/lgraph_builder.py`. This subgraph includes:
+By default, the router subgraph is exposed from
+`src/graphs/router_subgraph/lgraph_builder.py`.
+
+Additional configs are provided to run each compiled subgraph independently:
+
+- `langgraph_server/planner_executor.json` →
+  `src/graphs/planner_executor_subgraph/lgraph_builder.py:subgraph`
+- `langgraph_server/rag.json` →
+  `src/graphs/rag_subgraph/lgraph_builder.py:subgraph`
+- `langgraph_server/react.json` →
+  `src/graphs/ReAct_subgraph/lgraph_builder.py:subgraph`
+- `langgraph_server/reasoner.json` →
+  `src/graphs/reasoner_subgraph/lgraph_builder.py:subgraph`
+
+The router subgraph includes:
 
 - **Router Node**: Routes user inputs to appropriate subgraphs
 - **Planner Executor Subgraph**: Handles planning and execution tasks

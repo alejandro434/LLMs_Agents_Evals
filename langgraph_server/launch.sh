@@ -13,7 +13,7 @@ fi
 if [ ! -f ".env" ]; then
     echo "Warning: .env file not found in root directory"
     echo "Creating .env from template..."
-    cp langraph_server/env.example .env
+    cp langgraph_server/env.example .env
     echo "Please edit .env and add your API keys before running the server"
     exit 1
 fi
@@ -23,9 +23,9 @@ echo "Ensuring dependencies are up to date..."
 uv sync
 
 echo "Starting LangGraph server..."
-echo "Configuration: langraph_server/langgraph.json"
+echo "Configuration: langgraph_server/langgraph.json"
 echo "Graph: Router Subgraph"
 echo ""
 
 # Launch the server using uv run
-uv run langgraph dev --config langraph_server/langgraph.json
+uv run langgraph dev --config langgraph_server/langgraph.json

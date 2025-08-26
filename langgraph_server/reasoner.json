@@ -1,7 +1,7 @@
 {
   "dockerfile_lines": [],
   "graphs": {
-    "router_graph": "./langraph_server/graph.py:graph"
+    "reasoner_graph": "./src/graphs/reasoner_subgraph/lgraph_builder.py:subgraph"
   },
   "env": ".env",
   "python_version": "3.12",

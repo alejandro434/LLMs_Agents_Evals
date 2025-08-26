@@ -14,12 +14,22 @@ from langgraph.types import Command
 
 if TYPE_CHECKING:
     from src.graphs.rag_subgraph.lgraph_builder import RAGSubgraphState
+from src.graphs.planner_executor_subgraph.schemas import Step
 
 
 async def rag_node(state: "RAGSubgraphState") -> Command[Literal[END]]:
     """RAG node."""
     # Handle the current_step from the state
-    current_step = state.get("current_step")
+    current_step_raw = state.get("current_step")
+
+    current_step: Step | None
+    if isinstance(current_step_raw, Step):
+        current_step = current_step_raw
+    elif isinstance(current_step_raw, dict):
+        # Accept dict input coming from RemoteGraph JSON and coerce to Step
+        current_step = Step(**current_step_raw)
+    else:
+        current_step = None
 
     if current_step:
         print(f"RAG node received step: {current_step.instruction}")
