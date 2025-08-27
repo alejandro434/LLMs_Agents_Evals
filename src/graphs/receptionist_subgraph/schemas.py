@@ -71,6 +71,30 @@ class ReceptionistOutputSchema(BaseModel):
         """
         return (self.direct_response_to_the_user is not None) != self.handoff_needed
 
+    @property
+    def user_info_complete(self) -> bool:
+        """Return True if all user info fields are present (not None).
+
+        Fields checked:
+        - user_name
+        - user_current_address
+        - user_employment_status
+        - user_last_job
+        - user_last_job_location
+        - user_last_job_company
+        - user_job_preferences
+        """
+        required_fields = (
+            self.user_name,
+            self.user_current_address,
+            self.user_employment_status,
+            self.user_last_job,
+            self.user_last_job_location,
+            self.user_last_job_company,
+            self.user_job_preferences,
+        )
+        return all(value is not None for value in required_fields)
+
 
 class UserProfileSchema(BaseModel):
     """Holds all information related to a user's profile."""
