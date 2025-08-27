@@ -1,14 +1,15 @@
-"""Router submodule for the workflow graph."""
+"""Router submodule for the workflow graph.
+
+uv run -m src.graphs.receptionist_subgraph.schemas
+"""
 
 # %%
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Literal
 
-import yaml
 from langgraph.graph import MessagesState
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ReceptionistOutputSchema(BaseModel):
@@ -70,6 +71,21 @@ class ReceptionistOutputSchema(BaseModel):
         or a handoff is needed, but not both.
         """
         return (self.direct_response_to_the_user is not None) != self.handoff_needed
+
+    @model_validator(mode="after")
+    def _validate_xor_state(self) -> ReceptionistOutputSchema:
+        """Enforce XOR between direct response and handoff flags.
+
+        Exactly one of `direct_response_to_the_user` and `handoff_needed` must
+        indicate the path: either provide a direct response (non-null) with no
+        handoff, or no direct response with a handoff.
+        """
+        if self.is_valid_state:
+            return self
+        raise ValueError(
+            "Exactly one of 'direct_response_to_the_user' (non-null) or "
+            "'handoff_needed' (True) must be set."
+        )
 
     @property
     def user_info_complete(self) -> bool:
@@ -135,19 +151,68 @@ class ReceptionistSubgraphState(MessagesState):
 
 
 if __name__ == "__main__":
-    with Path("src/graphs/receptionist_subgraph/fewshots.yml").open(
-        encoding="utf-8"
-    ) as f:
-        fewshots = yaml.safe_load(f)
+    # Simple, side-effect-safe tests and demonstrations
+    print("Running ReceptionistOutputSchema simple tests...")
 
-    for example in fewshots["Receptionist_examples"]:
-        output = example["output"]
-        receptionist_output = ReceptionistOutputSchema(**output)
-        print(
-            f"Input: '{example['input']}'\n"
-            f"Output: {output}\n"
-            f"Correctness: {receptionist_output.correctness}\n"
-            "---"
+    # 1) Valid: direct response present, no handoff
+    a = ReceptionistOutputSchema(
+        direct_response_to_the_user="Here is your answer.",
+        handoff_needed=False,
+    )
+    if not a.is_valid_state:
+        raise AssertionError("Expected valid state when direct response is present")
+
+    # 2) Valid: no direct response, handoff required
+    b = ReceptionistOutputSchema(
+        direct_response_to_the_user=None,
+        handoff_needed=True,
+    )
+    if not b.is_valid_state:
+        raise AssertionError("Expected valid state when handoff is required")
+
+    # 3) Invalid: neither direct response nor handoff
+    try:
+        ReceptionistOutputSchema(
+            direct_response_to_the_user=None,
+            handoff_needed=False,
         )
+        raise AssertionError("Expected ValueError for invalid XOR state (none)")
+    except ValueError:
+        pass
+
+    # 4) Invalid: both direct response and handoff
+    try:
+        ReceptionistOutputSchema(
+            direct_response_to_the_user="Text",
+            handoff_needed=True,
+        )
+        raise AssertionError("Expected ValueError for invalid XOR state (both)")
+    except ValueError:
+        pass
+
+    # 5) user_info_complete should be False by default
+    c = ReceptionistOutputSchema(
+        direct_response_to_the_user=None,
+        handoff_needed=True,
+    )
+    if c.user_info_complete is not False:
+        raise AssertionError("Expected incomplete user info by default")
+
+    # 6) user_info_complete True when all user fields are provided
+    d = ReceptionistOutputSchema(
+        direct_response_to_the_user=None,
+        handoff_needed=True,
+        user_name="Jane Doe",
+        user_current_address="456 Oak St, Rockville, MD",
+        user_employment_status="employed",
+        user_last_job="Barista",
+        user_last_job_location="Rockville, MD",
+        user_last_job_company="Starbucks",
+        user_job_preferences=("Full-time admin roles in Montgomery County"),
+    )
+    if d.user_info_complete is not True:
+        raise AssertionError("Expected complete user info when all fields set")
+
+    print("All ReceptionistOutputSchema tests passed.")
 
 # %%
