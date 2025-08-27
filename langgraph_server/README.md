@@ -43,6 +43,9 @@ uv run langgraph dev --config langgraph_server/react.json
 
 # Reasoner subgraph
 uv run langgraph dev --config langgraph_server/reasoner.json
+
+# Receptionist subgraph
+uv run langgraph dev --config langgraph_server/receptionist.json
 ```
 
 The original `langgraph_server/langgraph.json` also launches the router subgraph.
@@ -75,6 +78,8 @@ Use the helper script to call a running subgraph with a schema-valid payload:
 ```bash
 uv run AWARE/agent-evals/subgraph_evals.py \
   --graph rag_graph
+  # For receptionist, use:
+  # --graph receptionist
 ```
 
 Notes:
@@ -100,6 +105,8 @@ Additional configs are provided to run each compiled subgraph independently:
   `src/graphs/ReAct_subgraph/lgraph_builder.py:subgraph`
 - `langgraph_server/reasoner.json` →
   `src/graphs/reasoner_subgraph/lgraph_builder.py:subgraph`
+- `langgraph_server/receptionist.json` →
+  `src/graphs/receptionist_subgraph/lgraph_builder.py:subgraph`
 
 The router subgraph includes:
 
@@ -128,6 +135,29 @@ curl -X POST http://localhost:8000/invoke \
     }
   }'
 ```
+
+For the receptionist subgraph (launched via `receptionist.json`), include a
+`thread_id` to enable checkpointed persistence:
+
+```bash
+curl -X POST http://localhost:8000/invoke \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": {
+      "messages": ["Hi, I\'m looking for an entry-level retail job."]
+    },
+    "config": {
+      "configurable": { "thread_id": "demo-thread-1" }
+    }
+  }'
+```
+
+The receptionist graph is compiled with a persistent SQLite checkpointer
+(`checkpoints.sqlite` in the repo root), so using the same `thread_id` will
+resume context across calls. See the docs for details:
+
+- Checkpointing reference: `https://langchain-ai.github.io/langgraph/reference/checkpoints/`
+- Persistence concepts: `https://langchain-ai.github.io/langgraph/concepts/persistence/`
 
 ## Development
 
