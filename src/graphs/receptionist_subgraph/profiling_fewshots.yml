@@ -1,0 +1,190 @@
+Profiling_examples:
+  - input:
+      direct_response_to_the_user: "I can share local job resources."
+      user_name: "John Doe"
+      user_current_address: "123 Main St, Baltimore, MD"
+      user_employment_status: "unemployed"
+      user_last_job: "Warehouse associate"
+      user_last_job_location: "Baltimore, MD"
+      user_last_job_company: "Acme Logistics"
+      user_job_preferences: "Entry-level IT support in Baltimore"
+      handoff_needed: false
+    output:
+      name: "John Doe"
+      current_address: "123 Main St, Baltimore, MD"
+      employment_status: "unemployed"
+      last_job: "Warehouse associate"
+      last_job_location: "Baltimore, MD"
+      last_job_company: "Acme Logistics"
+      job_preferences: "Entry-level IT support in Baltimore"
+
+  - input:
+      direct_response_to_the_user: null
+      user_name: "Maria Sanchez"
+      user_current_address: "Silver Spring, MD"
+      user_employment_status: "employed"
+      user_last_job: "Dental assistant"
+      user_last_job_location: "Silver Spring, MD"
+      user_last_job_company: "Bright Smiles Clinic"
+      user_job_preferences: "Move into healthcare admin in Montgomery County"
+      handoff_needed: true
+    output:
+      name: "Maria Sanchez"
+      current_address: "Silver Spring, MD"
+      employment_status: "employed"
+      last_job: "Dental assistant"
+      last_job_location: "Silver Spring, MD"
+      last_job_company: "Bright Smiles Clinic"
+      job_preferences: "Move into healthcare admin in Montgomery County"
+
+  - input:
+      direct_response_to_the_user: "Let me outline options for creatives."
+      user_name: "Alex Kim"
+      user_current_address: "Arlington, VA"
+      user_employment_status: "self-employed"
+      user_last_job: "Freelance graphic designer"
+      user_last_job_location: "Arlington, VA"
+      user_last_job_company: null
+      user_job_preferences: "Part-time remote design projects"
+      handoff_needed: false
+    output:
+      name: "Alex Kim"
+      current_address: "Arlington, VA"
+      employment_status: "self-employed"
+      last_job: "Freelance graphic designer"
+      last_job_location: "Arlington, VA"
+      last_job_company: null
+      job_preferences: "Part-time remote design projects"
+
+  - input:
+      direct_response_to_the_user: "Happy to provide community resources."
+      user_name: "Patricia Nguyen"
+      user_current_address: "Richmond, VA"
+      user_employment_status: "retired"
+      user_last_job: "Elementary school teacher"
+      user_last_job_location: "Richmond, VA"
+      user_last_job_company: "Richmond Public Schools"
+      user_job_preferences: "Light volunteer work; occasional tutoring"
+      handoff_needed: false
+    output:
+      name: "Patricia Nguyen"
+      current_address: "Richmond, VA"
+      employment_status: "retired"
+      last_job: "Elementary school teacher"
+      last_job_location: "Richmond, VA"
+      last_job_company: "Richmond Public Schools"
+      job_preferences: "Light volunteer work; occasional tutoring"
+
+  - input:
+      direct_response_to_the_user: null
+      user_name: "David Lee"
+      user_current_address: "Arlington, VA"
+      user_employment_status: "unemployed"
+      user_last_job: "Retail cashier"
+      user_last_job_location: "Arlington, VA"
+      user_last_job_company: "Corner Mart"
+      user_job_preferences: "Warehouse or delivery work in Northern VA"
+      handoff_needed: true
+    output:
+      name: "David Lee"
+      current_address: "Arlington, VA"
+      employment_status: "unemployed"
+      last_job: "Retail cashier"
+      last_job_location: "Arlington, VA"
+      last_job_company: "Corner Mart"
+      job_preferences: "Warehouse or delivery work in Northern VA"
+
+  - input:
+      direct_response_to_the_user: null
+      user_name: "Samantha Green"
+      user_current_address: "Remote (Bethesda, MD)"
+      user_employment_status: "employed"
+      user_last_job: "Software engineer"
+      user_last_job_location: "Bethesda, MD"
+      user_last_job_company: "TechNova"
+      user_job_preferences: "Move into engineering lead; hybrid schedule"
+      handoff_needed: true
+    output:
+      name: "Samantha Green"
+      current_address: "Remote (Bethesda, MD)"
+      employment_status: "employed"
+      last_job: "Software engineer"
+      last_job_location: "Bethesda, MD"
+      last_job_company: "TechNova"
+      job_preferences: "Move into engineering lead; hybrid schedule"
+
+  - input:
+      direct_response_to_the_user: "I can help gather more details."
+      user_name: null
+      user_current_address: "Baltimore, MD"
+      user_employment_status: "unemployed"
+      user_last_job: null
+      user_last_job_location: null
+      user_last_job_company: null
+      user_job_preferences: "Night shift cleaning or janitorial roles"
+      handoff_needed: false
+    output:
+      name: null
+      current_address: "Baltimore, MD"
+      employment_status: "unemployed"
+      last_job: null
+      last_job_location: null
+      last_job_company: null
+      job_preferences: "Night shift cleaning or janitorial roles"
+
+  - input:
+      direct_response_to_the_user: "Here are training programs you can consider."
+      user_name: "Chris Johnson"
+      user_current_address: "Alexandria, VA"
+      user_employment_status: "self-employed"
+      user_last_job: "Rideshare driver"
+      user_last_job_location: "Alexandria, VA"
+      user_last_job_company: null
+      user_job_preferences: "Healthcare training; entry-level medical assistant"
+      handoff_needed: false
+    output:
+      name: "Chris Johnson"
+      current_address: "Alexandria, VA"
+      employment_status: "self-employed"
+      last_job: "Rideshare driver"
+      last_job_location: "Alexandria, VA"
+      last_job_company: null
+      job_preferences: "Healthcare training; entry-level medical assistant"
+
+  - input:
+      direct_response_to_the_user: null
+      user_name: "Taylor Brooks"
+      user_current_address: "Baltimore, MD"
+      user_employment_status: "employed"
+      user_last_job: "Front-desk associate"
+      user_last_job_location: "Baltimore, MD"
+      user_last_job_company: "Harbor Hotel"
+      user_job_preferences: "Higher-pay hospitality roles; supervisory track"
+      handoff_needed: true
+    output:
+      name: "Taylor Brooks"
+      current_address: "Baltimore, MD"
+      employment_status: "employed"
+      last_job: "Front-desk associate"
+      last_job_location: "Baltimore, MD"
+      last_job_company: "Harbor Hotel"
+      job_preferences: "Higher-pay hospitality roles; supervisory track"
+
+  - input:
+      direct_response_to_the_user: "Thanks, I captured your preferences."
+      user_name: "Evelyn Wright"
+      user_current_address: "Fairfax, VA"
+      user_employment_status: "retired"
+      user_last_job: "Accountant"
+      user_last_job_location: "Fairfax, VA"
+      user_last_job_company: "Green & Co."
+      user_job_preferences: null
+      handoff_needed: false
+    output:
+      name: "Evelyn Wright"
+      current_address: "Fairfax, VA"
+      employment_status: "retired"
+      last_job: "Accountant"
+      last_job_location: "Fairfax, VA"
+      last_job_company: "Green & Co."
+      job_preferences: null
