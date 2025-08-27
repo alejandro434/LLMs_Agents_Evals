@@ -138,6 +138,22 @@ class UserProfileSchema(BaseModel):
         description="A summary of the user's career interests, needs, and preferences (e.g., industry, role type, salary expectations).",
     )
 
+    @property
+    def user_info_complete(self) -> bool:
+        """Checks if the user info is complete."""
+        return all(
+            value is not None
+            for value in (
+                self.name,
+                self.current_address,
+                self.employment_status,
+                self.last_job,
+                self.last_job_location,
+                self.last_job_company,
+                self.job_preferences,
+            )
+        )
+
 
 class ReceptionistSubgraphState(MessagesState):
     """Receptionist subgraph state."""
@@ -213,6 +229,52 @@ if __name__ == "__main__":
     if d.user_info_complete is not True:
         raise AssertionError("Expected complete user info when all fields set")
 
-    print("All ReceptionistOutputSchema tests passed.")
+    # 7) Validator message includes helpful hint
+    try:
+        ReceptionistOutputSchema(
+            direct_response_to_the_user=None,
+            handoff_needed=False,
+        )
+    except ValueError as exc:
+        if "must be set" not in str(exc):
+            raise AssertionError("Expected helpful validator message") from None
+
+    print("ReceptionistOutputSchema tests passed.")
+
+    # UserProfileSchema: user_info_complete property
+    print("Running UserProfileSchema simple tests...")
+
+    # 1) Default: incomplete
+    up_a = UserProfileSchema()
+    if up_a.user_info_complete is not False:
+        raise AssertionError("Expected incomplete user profile by default")
+
+    # 2) Fully populated: complete
+    up_b = UserProfileSchema(
+        name="Jane Doe",
+        current_address="456 Oak St, Rockville, MD",
+        employment_status="employed",
+        last_job="Barista",
+        last_job_location="Rockville, MD",
+        last_job_company="Starbucks",
+        job_preferences="Full-time admin roles in Montgomery County",
+    )
+    if up_b.user_info_complete is not True:
+        raise AssertionError("Expected complete user profile when all fields set")
+
+    # 3) Missing one field: incomplete
+    up_c = UserProfileSchema(
+        name="Jane Doe",
+        current_address="456 Oak St, Rockville, MD",
+        employment_status="employed",
+        last_job="Barista",
+        last_job_location="Rockville, MD",
+        last_job_company=None,
+        job_preferences="Full-time admin roles in Montgomery County",
+    )
+    if up_c.user_info_complete is not False:
+        raise AssertionError("Expected incomplete user profile when field missing")
+
+    print("UserProfileSchema tests passed.")
 
 # %%
