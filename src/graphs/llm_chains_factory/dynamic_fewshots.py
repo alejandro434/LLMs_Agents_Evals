@@ -10,6 +10,7 @@ from typing import Any
 
 import yaml
 from dotenv import load_dotenv
+from langchain_core.embeddings import Embeddings
 from langchain_core.example_selectors import SemanticSimilarityExampleSelector
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.prompts import (
@@ -24,7 +25,7 @@ from langchain_openai import OpenAIEmbeddings
 load_dotenv(override=True)
 
 # Default path to the few-shots YAML colocated with this module
-DEFAULT_FEWSHOTS_PATH = Path(__file__).parent / "test_fewshots.yaml"
+DEFAULT_FEWSHOTS_PATH = Path(__file__).parent / "test_fewshots.yml"
 
 
 def _transform_sequential_pairs(
@@ -92,9 +93,32 @@ def _coerce_output_text(value: Any) -> str:
         try:
             dumped = yaml.safe_dump(value, sort_keys=True)
             return str(dumped).strip()
-        except Exception:  # pragma: no cover
+        except yaml.YAMLError:  # pragma: no cover
             return str(value)
     return str(value).strip()
+
+
+def _render_history_lines(history: list[Any]) -> list[str]:
+    """Render conversation history as indented lines for the system block."""
+    lines: list[str] = []
+    for turn in history:
+        role = None
+        turn_content = ""
+        if isinstance(turn, HumanMessage | AIMessage):
+            role = "human" if isinstance(turn, HumanMessage) else "ai"
+            turn_content = str(getattr(turn, "content", ""))
+        elif isinstance(turn, dict):
+            if "human" in turn:
+                role = "human"
+                turn_content = str(turn.get("human", ""))
+            elif "ai" in turn:
+                role = "ai"
+                turn_content = str(turn.get("ai", ""))
+        if role:
+            lines.append(f"    - {role}:")
+            for line in str(turn_content).splitlines() or [""]:
+                lines.append(f"        {line}")
+    return lines
 
 
 def render_examples_for_system(examples: list[dict]) -> str:
@@ -116,42 +140,25 @@ def render_examples_for_system(examples: list[dict]) -> str:
         ----------------------------------------
     """
     lines: list[str] = []
-    for idx, ex in enumerate(examples, start=1):
-        lines.append(f"Example {idx}:")
+    for example_index, example_row in enumerate(examples, start=1):
+        lines.append(f"Example {example_index}:")
         lines.append("Conversation_history:")
 
-        history = ex.get("history", [])
-        for turn in history:
-            # Support BaseMessage or dict turns
-            role = None
-            content = ""
-            if isinstance(turn, (HumanMessage, AIMessage)):
-                role = "human" if isinstance(turn, HumanMessage) else "ai"
-                content = str(getattr(turn, "content", ""))
-            elif isinstance(turn, dict):
-                if "human" in turn:
-                    role = "human"
-                    content = str(turn.get("human", ""))
-                elif "ai" in turn:
-                    role = "ai"
-                    content = str(turn.get("ai", ""))
-            if role:
-                lines.append(f"    - {role}:")
-                for line in str(content).splitlines() or [""]:
-                    lines.append(f"        {line}")
+        history = example_row.get("history", [])
+        lines.extend(_render_history_lines(history))
 
         def _blk(label: str, value: str) -> None:
             lines.append(f"- {label}:")
             for line in str(value).splitlines() or [""]:
                 lines.append(f"    {line}")
 
-        _blk("input", str(ex.get("input", "")))
-        output_text = str(ex.get("output", ""))
+        _blk("input", str(example_row.get("input", "")))
+        output_text = str(example_row.get("output", ""))
         _blk(
             "direct_response_to_the_user",
-            str(ex.get("direct_response_to_the_user", output_text)),
+            str(example_row.get("direct_response_to_the_user", output_text)),
         )
-        _blk("handoff_needed", str(ex.get("handoff_needed", "")))
+        _blk("handoff_needed", str(example_row.get("handoff_needed", "")))
         lines.append("----------------------------------------")
 
     return "\n".join(lines)
@@ -165,6 +172,7 @@ def create_dynamic_fewshooter(
     k: int = 2,
     selector_input_variable: str = "input",
     group: str | None = None,
+    embeddings: Embeddings | None = None,
 ) -> FewShotChatMessagePromptTemplate:
     """Create a dynamic few-shot chat prompt template using semantic selection.
 
@@ -175,189 +183,47 @@ def create_dynamic_fewshooter(
     - Skips incomplete items safely.
 
     Args:
-        yaml_path: Optional path to YAML. Defaults to `fewshots.yaml` in this module.
+        yaml_path: Optional path to YAML. Defaults to `test_fewshots.yml` next to
+            this module.
         input_key: Preferred input field name if present.
         output_key: Preferred output field name if present.
         k: Number of examples to select.
-        selector_input_variable: The variable name whose value will drive example selection.
+        selector_input_variable: The variable name whose value will drive
+            example selection.
         group: Optional group name inside the YAML when it is a mapping of
             groups to lists. If not provided and the YAML is grouped, the
             function auto-detects the best group based on key-pair matches.
+        embeddings: Optional embeddings backend. If not provided, an
+            OpenAI embeddings model is used.
 
     Returns:
         FewShotChatMessagePromptTemplate ready to be composed in a chat prompt.
     """
     yaml_path = yaml_path or DEFAULT_FEWSHOTS_PATH
 
-    # Read and validate YAML structure
-    data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-    rows: list[dict]
+    data = _parse_yaml_strict(_read_text(yaml_path), yaml_path)
 
-    # Auto-detect best matching key pair by frequency
     candidate_pairs: list[tuple[str, str]] = [
         (input_key, output_key),
-        ("pregunta", "generated_queries"),  # Questions generation dataset
-        ("pregunta", "cypher_query"),  # Cypher dataset
-        ("question", "answer"),  # Common fallback
+        ("pregunta", "generated_queries"),
+        ("pregunta", "cypher_query"),
+        ("question", "answer"),
     ]
 
-    def count_pair(items: Iterable[dict], inp: str, out: str) -> int:
-        return sum(1 for it in items if inp in it and out in it)
-
-    def _select_rows_from_grouped_yaml(obj: dict) -> list[dict]:
-        # Validate candidate lists inside the mapping
-        list_like_groups: dict[str, list] = {
-            k: v for k, v in obj.items() if isinstance(v, list)
-        }
-        if not list_like_groups:
-            raise ValueError(
-                "YAML mapping has no list-like groups. Available keys: "
-                f"{sorted(obj.keys())}"
-            )
-
-        # Pre-transform sequential pairs if detected
-        for g, items in list_like_groups.items():
-            if all("input" in d or "output" in d for d in items if isinstance(d, dict)):
-                list_like_groups[g] = _transform_sequential_pairs(items)
-
-        if group is not None:
-            if group not in list_like_groups:
-                raise KeyError(
-                    "Requested group '{group}' not found. Available groups: "
-                    f"{sorted(list_like_groups.keys())}"
-                )
-            selected_rows = [
-                it for it in list_like_groups[group] if isinstance(it, dict)
-            ]
-            return selected_rows
-
-        # Auto-detect best group by which one yields the highest key-pair coverage
-        scored: list[tuple[str, int]] = []
-        for gname, items in list_like_groups.items():
-            dict_items = [it for it in items if isinstance(it, dict)]
-            score = 0
-            for cand in candidate_pairs:
-                score += count_pair(dict_items, *cand)
-            scored.append((gname, score))
-        scored.sort(key=lambda x: x[1], reverse=True)
-
-        best_group, best_score = scored[0]
-        if best_score == 0:
-            # Fallback: flatten all lists
-            merged: list[dict] = []
-            for items in list_like_groups.values():
-                merged.extend([it for it in items if isinstance(it, dict)])
-            return merged
-        return [it for it in list_like_groups[best_group] if isinstance(it, dict)]
-
-    if isinstance(data, list):
-        rows = [row for row in data if isinstance(row, dict)]
-        # Check for sequential pair format in a top-level list
-        if all("input" in d or "output" in d for d in rows):
-            rows = _transform_sequential_pairs(rows)
-    elif isinstance(data, dict):
-        rows = _select_rows_from_grouped_yaml(data)
-    else:
-        raise ValueError(
-            "Unsupported YAML root type "
-            f"{type(data).__name__}. "
-            "Expected list or mapping of lists: "
-            f"{yaml_path}"
-        )
-
+    rows = _prepare_rows(data, group)
     if not rows:
         raise ValueError(f"No dictionary examples found in YAML file: {yaml_path}")
 
-    pair_counts = [(pair, count_pair(rows, *pair)) for pair in candidate_pairs]
-    pair_counts.sort(key=lambda x: x[1], reverse=True)
-    best_pair, best_count = pair_counts[0]
-    if best_count == 0:
-        available_keys = sorted({k for it in rows for k in it})
-        raise KeyError(
-            f"Could not infer input/output keys for {yaml_path}. "
-            f"Tried {candidate_pairs}. Available keys: {available_keys}"
-        )
-    source_input_key, source_output_key = best_pair
+    source_input_key, source_output_key = _infer_key_pair(rows, candidate_pairs)
 
-    # Build normalized examples; include optional Conversation_history
-    examples: list[dict] = []
-    for it in rows:
-        if (
-            source_input_key in it
-            and source_output_key in it
-            and str(it[source_input_key]).strip()
-            and str(it[source_output_key]).strip()
-        ):
-            history_msgs: list[BaseMessage] = []
-            conv = it.get("Conversation_history")
-            if isinstance(conv, list):
-                for turn in conv:
-                    if not isinstance(turn, dict):
-                        continue
-                    if "human" in turn:
-                        history_msgs.append(
-                            HumanMessage(content=str(turn.get("human", "")))
-                        )
-                    if "ai" in turn:
-                        history_msgs.append(AIMessage(content=str(turn.get("ai", ""))))
-            # Extract and normalize output + flags
-            output_obj = it.get(source_output_key)
-            direct_text = _coerce_output_text(output_obj)
-            handoff_needed_val: str = ""
-            if isinstance(output_obj, dict):
-                hn = output_obj.get("handoff_needed", None)
-                if hn is not None:
-                    handoff_needed_val = str(hn)
-
-            # Pre-render history as plain text for system injection
-            history_text = "\n".join(
-                [
-                    (
-                        ("human: " + m.content)
-                        if isinstance(m, HumanMessage)
-                        else ("ai: " + m.content)
-                    )
-                    for m in history_msgs
-                    if getattr(m, "content", "")
-                ]
-            )
-
-            examples.append(
-                {
-                    "input": str(it[source_input_key]).strip(),
-                    "output": direct_text,
-                    "direct_response_to_the_user": direct_text,
-                    "handoff_needed": handoff_needed_val,
-                    # Always include history key for template stability
-                    "history": history_msgs,
-                    "history_text": history_text,
-                }
-            )
+    examples = _normalize_examples(rows, source_input_key, source_output_key)
     if not examples:
         raise ValueError(f"No valid examples after normalization from: {yaml_path}")
 
-    # Prepare texts to vectorize (explicit order for stability)
-    # Vectorize only the user's question (input) for similarity matching
     to_vectorize = [ex["input"] for ex in examples]
 
-    # Initialize embeddings with robust fallback
-    embeddings = None
-    init_errors: list[str] = []
-    try:
-        embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-    except Exception as exc:
-        init_errors.append(f"OpenAIEmbeddings failed: {exc}")
-    if embeddings is None:
-        try:
-            embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-        except Exception as exc:
-            init_errors.append(f"OpenAIEmbeddings failed: {exc}")
-            raise RuntimeError(
-                "No embeddings backend available. "
-                "Set Azure OpenAI or OpenAI credentials. " + "; ".join(init_errors)
-            ) from exc
+    embeddings = embeddings or OpenAIEmbeddings(model="text-embedding-3-small")
 
-    # Build selector with safe k
     effective_k = max(1, min(k, len(examples)))
     vectorstore = InMemoryVectorStore.from_texts(
         to_vectorize, embeddings, metadatas=examples
@@ -386,6 +252,140 @@ def create_dynamic_fewshooter(
             ]
         ),
     )
+
+
+def _read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"Few-shots YAML not found: {path}") from exc
+
+
+def _parse_yaml_strict(text: str, path: Path) -> Any:
+    try:
+        return yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        raise ValueError(f"Invalid YAML in {path}: {exc}") from exc
+
+
+def _prepare_rows(data: Any, group: str | None) -> list[dict]:
+    rows: list[dict]
+    if isinstance(data, list):
+        rows = [row for row in data if isinstance(row, dict)]
+        if all("input" in d or "output" in d for d in rows):
+            rows = _transform_sequential_pairs(rows)
+        return rows
+    if isinstance(data, dict):
+        return _select_rows_from_grouped_yaml(data, group)
+    raise ValueError(
+        "Unsupported YAML root type "
+        f"{type(data).__name__}. "
+        "Expected list or mapping of lists."
+    )
+
+
+def _select_rows_from_grouped_yaml(obj: dict, group: str | None) -> list[dict]:
+    list_like_groups: dict[str, list] = {
+        k: v for k, v in obj.items() if isinstance(v, list)
+    }
+    if not list_like_groups:
+        raise ValueError(
+            "YAML mapping has no list-like groups. Available keys: "
+            f"{sorted(obj.keys())}"
+        )
+
+    for g, items in list_like_groups.items():
+        if all("input" in d or "output" in d for d in items if isinstance(d, dict)):
+            list_like_groups[g] = _transform_sequential_pairs(items)
+
+    if group is not None:
+        if group not in list_like_groups:
+            available = sorted(list_like_groups.keys())
+            raise KeyError(
+                f"Requested group '{group}' not found. Available groups: {available}"
+            )
+        return [it for it in list_like_groups[group] if isinstance(it, dict)]
+
+    # Auto-detect best group by key-pair coverage is dropped for simplicity; we
+    # instead flatten all lists, which is robust and predictable.
+    merged: list[dict] = []
+    for items in list_like_groups.values():
+        merged.extend([it for it in items if isinstance(it, dict)])
+    return merged
+
+
+def _infer_key_pair(
+    rows: Iterable[dict], candidate_pairs: list[tuple[str, str]]
+) -> tuple[str, str]:
+    def count_pair(items: Iterable[dict], inp: str, out: str) -> int:
+        return sum(1 for it in items if inp in it and out in it)
+
+    pair_counts = [(pair, count_pair(rows, *pair)) for pair in candidate_pairs]
+    pair_counts.sort(key=lambda x: x[1], reverse=True)
+    best_pair, best_count = pair_counts[0]
+    if best_count == 0:
+        available_keys = sorted({k for it in rows for k in it})
+        raise KeyError(
+            "Could not infer input/output keys. "
+            f"Tried {candidate_pairs}. Available keys: {available_keys}"
+        )
+    return best_pair
+
+
+def _normalize_examples(
+    rows: Iterable[dict], source_input_key: str, source_output_key: str
+) -> list[dict]:
+    examples: list[dict] = []
+    for it in rows:
+        if (
+            source_input_key in it
+            and source_output_key in it
+            and str(it[source_input_key]).strip()
+            and str(it[source_output_key]).strip()
+        ):
+            history_msgs: list[BaseMessage] = []
+            conv = it.get("Conversation_history")
+            if isinstance(conv, list):
+                for turn in conv:
+                    if not isinstance(turn, dict):
+                        continue
+                    if "human" in turn:
+                        history_msgs.append(
+                            HumanMessage(content=str(turn.get("human", "")))
+                        )
+                    if "ai" in turn:
+                        history_msgs.append(AIMessage(content=str(turn.get("ai", ""))))
+            output_obj = it.get(source_output_key)
+            direct_text = _coerce_output_text(output_obj)
+            handoff_needed_val: str = ""
+            if isinstance(output_obj, dict):
+                hn = output_obj.get("handoff_needed", None)
+                if hn is not None:
+                    handoff_needed_val = str(hn)
+
+            history_text = "\n".join(
+                [
+                    (
+                        ("human: " + m.content)
+                        if isinstance(m, HumanMessage)
+                        else ("ai: " + m.content)
+                    )
+                    for m in history_msgs
+                    if getattr(m, "content", "")
+                ]
+            )
+
+            examples.append(
+                {
+                    "input": str(it[source_input_key]).strip(),
+                    "output": direct_text,
+                    "direct_response_to_the_user": direct_text,
+                    "handoff_needed": handoff_needed_val,
+                    "history": history_msgs,
+                    "history_text": history_text,
+                }
+            )
+    return examples
 
 
 if __name__ == "__main__":

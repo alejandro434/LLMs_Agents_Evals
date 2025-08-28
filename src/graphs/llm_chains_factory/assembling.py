@@ -6,8 +6,11 @@ uv run python src/graphs/llm_chains_factory/assembling.py
 # %%
 from collections.abc import Callable
 from pathlib import Path
+from typing import NamedTuple
 
 import yaml
+from langchain_core.embeddings import Embeddings
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableLambda
 from pydantic import BaseModel
@@ -19,12 +22,7 @@ from src.graphs.llm_chains_factory.dynamic_fewshots import (
 from src.utils import get_llm
 
 
-def build_prompt(
-    system_prompt: str,
-    k: int = 5,
-    group: str | None = None,
-    yaml_path: Path | None = None,
-) -> ChatPromptTemplate:
+def build_prompt() -> ChatPromptTemplate:
     """Build a ChatPromptTemplate that expects a pre-rendered system block.
 
     The actual rendering of few-shots into the system content is handled
@@ -48,18 +46,95 @@ def build_structured_chain(
     postprocess: Callable | None = None,
     group: str | None = None,
     yaml_path: Path | None = None,
+    current_history: list[BaseMessage | dict] | None = None,
 ) -> Runnable:
-    """Create a structured-output chain for an arbitrary system prompt and schema."""
+    """Create a structured-output chain for an arbitrary system prompt and schema.
+
+    Note: To inspect the exact system prompt (with few-shots) without invoking
+    the LLM, use `build_structured_chain_with_renderer(...)` and call the
+    returned `render_system_block` helper.
+    """
+    chain_bundle = build_structured_chain_with_renderer(
+        system_prompt=system_prompt,
+        output_schema=output_schema,
+        k=k,
+        temperature=temperature,
+        postprocess=postprocess,
+        group=group,
+        yaml_path=yaml_path,
+        current_history=current_history,
+    )
+    return chain_bundle.chain
+
+
+class StructuredChainBundle(NamedTuple):
+    """Convenience bundle for a chain plus a renderer helper."""
+
+    chain: Runnable
+    render_system_block: Callable[[str | dict], str]
+
+
+def build_structured_chain_with_renderer(
+    *,
+    system_prompt: str,
+    output_schema: type[BaseModel],
+    k: int = 5,
+    temperature: float = 0,
+    postprocess: Callable | None = None,
+    group: str | None = None,
+    yaml_path: Path | None = None,
+    embeddings: Embeddings | None = None,
+    current_history: list[BaseMessage | dict] | None = None,
+) -> StructuredChainBundle:
+    """Create the chain and also return a helper to render the system block."""
     llm = get_llm().bind(temperature=temperature)
     # We'll compute the system block using the dynamic fewshot selector
-    few_shooter = create_dynamic_fewshooter(k=k, group=group, yaml_path=yaml_path)
+    few_shooter = create_dynamic_fewshooter(
+        k=k, group=group, yaml_path=yaml_path, embeddings=embeddings
+    )
+
+    def _render_history_lines(history: list[BaseMessage | dict]) -> list[str]:
+        lines: list[str] = []
+        for turn in history:
+            role = None
+            turn_content = ""
+            if isinstance(turn, HumanMessage | AIMessage):
+                role = "human" if isinstance(turn, HumanMessage) else "ai"
+                turn_content = str(getattr(turn, "content", ""))
+            elif isinstance(turn, dict):
+                if "human" in turn:
+                    role = "human"
+                    turn_content = str(turn.get("human", ""))
+                elif "ai" in turn:
+                    role = "ai"
+                    turn_content = str(turn.get("ai", ""))
+            if role:
+                lines.append("    - " + role + ":")
+                for line in str(turn_content).splitlines() or [""]:
+                    lines.append("        " + line)
+        return lines
+
+    def _render_schema_lines(model: type[BaseModel]) -> list[str]:
+        schema = model.model_json_schema()
+        properties: dict = schema.get("properties", {})
+        required: set[str] = set(schema.get("required", []) or [])
+
+        def _type_of(prop: dict) -> str:
+            t = prop.get("type")
+            if isinstance(t, list):
+                return "/".join(sorted(str(x) for x in t))
+            return str(t or "object")
+
+        lines: list[str] = []
+        for name, prop in properties.items():
+            typ = _type_of(prop)
+            suffix = "(required)" if name in required else "(optional)"
+            lines.append(f"- {name}: {typ} {suffix}")
+        return lines
 
     def _build_system_block(raw: str | dict) -> dict:
         # Normalize input
-        if isinstance(raw, dict):
-            user_input = str(raw.get("input", ""))
-        else:
-            user_input = str(raw)
+        user_input = str(raw.get("input", "")) if isinstance(raw, dict) else str(raw)
 
         selector = getattr(few_shooter, "example_selector", None)
         selected = []
@@ -67,27 +142,55 @@ def build_structured_chain(
             selected = selector.select_examples({"input": user_input})
 
         rendered = render_examples_for_system(selected)
-        system_block = (
-            f"{system_prompt}\n\n"
-            "== Final prompt (messages in order) ==\n"
-            "System prompt:\n"
-            f"{system_prompt}\n\n"
-            f"{rendered}\n"
-            "Now, continue the following conversation with the user, and fill the "
-            "required structure output schema:\n"
-            "- input:\n"
-            f"    {user_input}\n"
-            "- direct_response_to_the_user:\n"
-            "(continue)\n"
+        lines: list[str] = []
+        lines.append(system_prompt)
+        lines.append("")
+        lines.append("== FINAL PROMPT (MESSAGES IN ORDER) ==")
+        lines.append("System prompt:")
+        lines.append(system_prompt)
+        lines.append("")
+
+        # Section 1: Few-shot examples (read-only)
+        lines.append("=== SECTION 1: FEW-SHOT EXAMPLES (READ-ONLY) ===")
+        lines.append("<EXAMPLES_START>")
+        lines.append(rendered)
+        lines.append("<EXAMPLES_END>")
+        lines.append("")
+
+        # Section 2: Current conversation (answer this)
+        lines.append("=== SECTION 2: ACTUAL CURRENT CONVERSATION (ANSWER THIS) ===")
+        lines.append("Instructions:")
+        lines.append("- Use the conversation below to produce the structured output.")
+        lines.append("- If examples conflict with the current conversation,")
+        lines.append("  prioritize the current conversation.")
+        lines.append("")
+        lines.append(
+            "Output schema to fill (respond strictly as valid JSON matching this "
         )
+        lines.append("schema):")
+        for ln in _render_schema_lines(output_schema):
+            lines.append(ln)
+        lines.append("")
+        lines.append("Short definitions:")
+        lines.append("- '- input:' is the last user message to answer.")
+        lines.append(
+            "- '- direct_response_to_the_user:' is your reply to that message."
+        )
+        lines.append("")
+        lines.append("<CONVERSATION_START>")
+        # Present actual current conversation in the same format as few-shots
+        if current_history:
+            lines.append("CURRENT CONVERSATION HISTORY:")
+            lines.extend(_render_history_lines(current_history))
+        lines.append("- input:")
+        for line in str(user_input).splitlines() or [""]:
+            lines.append("    " + line)
+        lines.append("- direct_response_to_the_user:")
+        lines.append("(you CONTINUE here the CURRENT conversation)")
+        system_block = "\n".join(lines)
         return {"system_block": system_block}
 
-    prompt = build_prompt(
-        system_prompt=system_prompt,
-        k=k,
-        group=group,
-        yaml_path=yaml_path,
-    )
+    prompt = build_prompt()
 
     pipeline: Runnable = (
         RunnableLambda(_build_system_block)
@@ -96,7 +199,14 @@ def build_structured_chain(
     )
     if postprocess is not None:
         pipeline = pipeline | RunnableLambda(postprocess)
-    return pipeline.with_retry(stop_after_attempt=3)
+    pipeline = pipeline.with_retry(stop_after_attempt=3)
+
+    def _render_system_block(raw: str | dict) -> str:
+        return _build_system_block(raw)["system_block"]
+
+    return StructuredChainBundle(
+        chain=pipeline, render_system_block=_render_system_block
+    )
 
 
 if __name__ == "__main__":
@@ -113,8 +223,17 @@ if __name__ == "__main__":
     ) as f:
         SYSTEM_PROMPT = yaml.safe_load(f)["SYSTEM_PROMPT_RECEPTIONIST"]
 
+    # Sample current chat history to include at the end of the system prompt
+    CURRENT_HISTORY = [
+        HumanMessage(
+            content=("Hi! I'm in Arlington, VA exploring cybersecurity and analytics.")
+        ),
+        AIMessage(content="What's your name and current address?"),
+        HumanMessage(content="James Patel, 1100 Wilson Blvd, Arlington, VA."),
+    ]
+
     # Build chain and print the final formatted system prompt too
-    chain = build_structured_chain(
+    bundle = build_structured_chain_with_renderer(
         system_prompt=SYSTEM_PROMPT,
         output_schema=TestOutputSchema,
         k=5,
@@ -122,37 +241,10 @@ if __name__ == "__main__":
         postprocess=None,
         group="TARGET_LLM_CHAIN_1",
         yaml_path=Path(__file__).parent / "test_fewshots.yml",
+        current_history=CURRENT_HISTORY,
     )
 
-    # Render the system block once for inspection using a small helper
-    from src.graphs.llm_chains_factory.dynamic_fewshots import (
-        create_dynamic_fewshooter as _create,
-        render_examples_for_system as _render,
-    )
-
-    FEW = _create(
-        k=5,
-        group="TARGET_LLM_CHAIN_1",
-        yaml_path=Path(__file__).parent / "test_fewshots.yml",
-    )
-    SELECTOR = getattr(FEW, "example_selector", None)
-    SELECTED = (
-        SELECTOR.select_examples(
-            {"input": "Which Virginia programs and employers should I target?"}
-        )
-        if SELECTOR
-        else []
-    )
-    SYSTEM_BLOCK = (
-        f"{SYSTEM_PROMPT}\n\n"
-        "== Final prompt (messages in order) ==\n"
-        "System prompt:\n"
-        f"{SYSTEM_PROMPT}\n\n"
-        f"{_render(SELECTED)}\n"
-        "Now, continue the following conversation with the user, and fill the required structure output schema:\n"
-        "- input:\n"
-        "    Which Virginia programs and employers should I target?\n"
-        "- direct_response_to_the_user:\n"
-        "(continue)\n"
-    )
+    # Render the system block once for inspection using the chain's helper
+    SAMPLE_INPUT = "Which Virginia programs and employers should I target?"
+    SYSTEM_BLOCK = bundle.render_system_block({"input": SAMPLE_INPUT})
     print(SYSTEM_BLOCK)
