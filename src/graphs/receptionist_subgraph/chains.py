@@ -4,45 +4,79 @@ uv run -m src.graphs.receptionist_subgraph.chains
 """
 
 # %%
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import yaml
+from langchain_core.messages import BaseMessage
 
-from src.graphs.llm_chains_factory.assembling import build_structured_chain
+from src.graphs.llm_chains_factory.assembling import (
+    build_structured_chain,
+)
 from src.graphs.receptionist_subgraph.schemas import (
     ReceptionistOutputSchema,
     UserProfileSchema,
 )
 
 
-with Path("src/graphs/receptionist_subgraph/system_prompt.yml").open(
-    encoding="utf-8"
-) as f:
-    SYSTEM_PROMPT = yaml.safe_load(f)["SYSTEM_PROMPT_RECEPTIONIST"]
-receptionist_chain = build_structured_chain(
-    system_prompt=SYSTEM_PROMPT,
-    output_schema=ReceptionistOutputSchema,
-    k=5,
-    temperature=0,
-    postprocess=None,
-    group="Receptionist_user_conversations",
-    yaml_path=Path(__file__).parent / "fewshots.yml",
-)
+_BASE_DIR = Path(__file__).parent
 
-with Path("src/graphs/receptionist_subgraph/profiling_system_prompt.yml").open(
-    encoding="utf-8"
-) as f:
-    SYSTEM_PROMPT_PROFILING = yaml.safe_load(f)["SYSTEM_PROMPT_RECEPTIONIST_PROFILING"]
 
-profiling_chain = build_structured_chain(
-    system_prompt=SYSTEM_PROMPT_PROFILING,
-    output_schema=UserProfileSchema,
-    k=5,
-    temperature=0,
-    postprocess=None,
-    group="Profiling_examples",
-    yaml_path=Path(__file__).parent / "profiling_fewshots.yml",
-)
+def _load_system_prompt(relative_file: str, key: str) -> str:
+    """Load a system prompt string from a YAML file in this package."""
+    with (_BASE_DIR / relative_file).open(encoding="utf-8") as fh:
+        return yaml.safe_load(fh)[key]
+
+
+def get_receptionist_chain(
+    *,
+    k: int = 5,
+    temperature: float = 0,
+    current_history: Sequence[BaseMessage | dict[str, Any]] | None = None,
+):
+    """Construct the receptionist structured-output chain.
+
+    current_history: optional conversation history to include in the prompt.
+    """
+    system_prompt = _load_system_prompt(
+        "system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST"
+    )
+    return build_structured_chain(
+        system_prompt=system_prompt,
+        output_schema=ReceptionistOutputSchema,
+        k=k,
+        temperature=temperature,
+        postprocess=None,
+        group="Receptionist_user_conversations",
+        yaml_path=_BASE_DIR / "fewshots.yml",
+        current_history=list(current_history) if current_history else None,
+    )
+
+
+def get_profiling_chain(
+    *,
+    k: int = 5,
+    temperature: float = 0,
+):
+    """Construct the profiling structured-output chain (field mapping)."""
+    system_prompt = _load_system_prompt(
+        "profiling_system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST_PROFILING"
+    )
+    return build_structured_chain(
+        system_prompt=system_prompt,
+        output_schema=UserProfileSchema,
+        k=k,
+        temperature=temperature,
+        postprocess=None,
+        group="Profiling_examples",
+        yaml_path=_BASE_DIR / "profiling_fewshots.yml",
+    )
+
+
+# Module-level chains (default configs)
+receptionist_chain = get_receptionist_chain()
+profiling_chain = get_profiling_chain()
 
 if __name__ == "__main__":
     import asyncio

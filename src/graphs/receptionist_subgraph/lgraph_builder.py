@@ -8,7 +8,7 @@ uv run -m src.graphs.receptionist_subgraph.lgraph_builder
 
 import uuid
 
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, START, StateGraph
 
@@ -33,9 +33,7 @@ builder.add_edge("validate_user_profile", "receptor")
 builder.add_edge("validate_user_profile", "handoff_to_logging")
 builder.add_edge("handoff_to_logging", END)
 
-# Compile a server-exportable subgraph with persistent checkpointing
-sqlite_saver = SqliteSaver.from_conn_string("checkpoints.sqlite")
-subgraph = builder.compile(checkpointer=sqlite_saver)
+graph_with_in_memory_checkpointer = builder.compile(checkpointer=MemorySaver())
 
 
 if __name__ == "__main__":
