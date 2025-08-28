@@ -2,7 +2,7 @@
 
 Exercises Conversation_history parsing and example injection into the prompt.
 
-uv run python src/graphs/receptionist_subgraph/test_dynamic_fewshots_system_prompt.py
+    uv run python src/graphs/receptionist_subgraph/test_dynamic_fewshots_system_prompt.py
 """
 
 # %%
@@ -11,7 +11,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-from langchain_core.messages import AIMessage, HumanMessage
 
 from src.graphs.llm_chains_factory.assembling import (
     build_structured_chain_with_renderer,
@@ -36,20 +35,20 @@ with profiling_system_prompt_path.open("r", encoding="utf-8") as f:
 
 if __name__ == "__main__":
     # Build chain bundle and render the final system block
-    current_history = [
-        HumanMessage(
-            content=("Hi! I'm in Arlington, VA exploring cybersecurity and analytics.")
-        ),
-        AIMessage(content="What's your name and current address?"),
-        HumanMessage(content="James Patel, 1100 Wilson Blvd, Arlington, VA."),
-    ]
+    # current_history = [
+    #     HumanMessage(
+    #         content=("Hi! I'm in Arlington, VA exploring cybersecurity and analytics.")
+    #     ),
+    #     AIMessage(content="What's your name and current address?"),
+    #     HumanMessage(content="James Patel, 1100 Wilson Blvd, Arlington, VA."),
+    # ]
 
     bundle = build_structured_chain_with_renderer(
         system_prompt=system_prompt,
         output_schema=ReceptionistOutputSchema,
         k=5,
         yaml_path=fewshots_path,
-        current_history=current_history,
+        # current_history=current_history,
     )
 
     DEMO_INPUT = "Which Virginia programs and employers should I target?"

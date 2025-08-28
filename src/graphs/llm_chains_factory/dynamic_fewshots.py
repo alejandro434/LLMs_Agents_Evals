@@ -158,7 +158,6 @@ def render_examples_for_system(examples: list[dict]) -> str:
             "direct_response_to_the_user",
             str(example_row.get("direct_response_to_the_user", output_text)),
         )
-        _blk("handoff_needed", str(example_row.get("handoff_needed", "")))
         lines.append("----------------------------------------")
 
     return "\n".join(lines)
@@ -242,10 +241,7 @@ def create_dynamic_fewshooter(
         # the history and the input/output as chat messages.
         example_prompt=ChatPromptTemplate.from_messages(
             [
-                (
-                    "system",
-                    "handoff_needed: {handoff_needed}",
-                ),
+                # Removed handoff_needed marker from system examples
                 MessagesPlaceholder(variable_name="history"),
                 ("human", "{input}"),
                 ("ai", "{output}"),
@@ -357,11 +353,6 @@ def _normalize_examples(
                         history_msgs.append(AIMessage(content=str(turn.get("ai", ""))))
             output_obj = it.get(source_output_key)
             direct_text = _coerce_output_text(output_obj)
-            handoff_needed_val: str = ""
-            if isinstance(output_obj, dict):
-                hn = output_obj.get("handoff_needed", None)
-                if hn is not None:
-                    handoff_needed_val = str(hn)
 
             history_text = "\n".join(
                 [
@@ -380,7 +371,6 @@ def _normalize_examples(
                     "input": str(it[source_input_key]).strip(),
                     "output": direct_text,
                     "direct_response_to_the_user": direct_text,
-                    "handoff_needed": handoff_needed_val,
                     "history": history_msgs,
                     "history_text": history_text,
                 }

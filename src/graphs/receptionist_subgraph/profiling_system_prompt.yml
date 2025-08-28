@@ -13,7 +13,7 @@ SYSTEM_PROMPT_RECEPTIONIST_PROFILING: |
     - user_last_job_location: string | null        # -> last_job_location
     - user_last_job_company: string | null         # -> last_job_company
     - user_job_preferences: string | null          # -> job_preferences
-    - handoff_needed: boolean                      # ignore
+    # handoff_needed removed
 
   Output object (UserProfileSchema):
     - name

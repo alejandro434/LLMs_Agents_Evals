@@ -84,8 +84,21 @@ if __name__ == "__main__":
     async def receptionist_chain_test() -> None:
         """Quick demo for receptionist_chain."""
         test_input = "Hi, I'm looking for an entry-level retail job."
+        # Optional history passed at invocation time
+        current_history = [
+            {"human": "Hi, I'm in Arlington, VA exploring cybersecurity."},
+            {"ai": "What's your name and current address?"},
+            {"human": "James Patel, 1100 Wilson Blvd, Arlington, VA."},
+        ]
+        runtime_context_injection = (
+            "User previously indicated preference for full-time roles and retail."
+        )
 
-        result = await receptionist_chain.ainvoke(test_input)
+        result = await receptionist_chain.ainvoke(
+            test_input,
+            current_history=current_history,
+            runtime_context_injection=runtime_context_injection,
+        )
         print(result.model_dump_json(indent=2))
 
     asyncio.run(receptionist_chain_test())
@@ -101,7 +114,6 @@ if __name__ == "__main__":
             user_last_job_location="Baltimore, MD",
             user_last_job_company="Acme Logistics",
             user_job_preferences="Entry-level IT support in Baltimore",
-            handoff_needed=False,
         ).model_dump_json()
 
         result = await profiling_chain.ainvoke(test_input)

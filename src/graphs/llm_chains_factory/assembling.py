@@ -132,9 +132,25 @@ def build_structured_chain_with_renderer(
             lines.append(f"- {name}: {typ} {suffix}")
         return lines
 
-    def _build_system_block(raw: str | dict) -> dict:
+    def _build_system_block(raw: str | dict, **kwargs) -> dict:
         # Normalize input
         user_input = str(raw.get("input", "")) if isinstance(raw, dict) else str(raw)
+
+        # Allow passing history at invocation time, falling back to builder default
+        runtime_history = None
+        if isinstance(raw, dict) and "current_history" in raw:
+            runtime_history = raw.get("current_history")
+        elif "current_history" in kwargs:
+            runtime_history = kwargs.get("current_history")
+
+        # Optional runtime context injection (string) to insert into the block
+        runtime_context_injection: str | None = None
+        if isinstance(raw, dict) and "runtime_context_injection" in raw:
+            runtime_context_injection = str(raw.get("runtime_context_injection") or "")
+        elif "runtime_context_injection" in kwargs:
+            runtime_context_injection = str(
+                kwargs.get("runtime_context_injection") or ""
+            )
 
         selector = getattr(few_shooter, "example_selector", None)
         selected = []
@@ -178,10 +194,15 @@ def build_structured_chain_with_renderer(
         )
         lines.append("")
         lines.append("<CONVERSATION_START>")
+        # Place runtime context injection immediately after CONVERSATION_START
+        if runtime_context_injection:
+            for line in runtime_context_injection.splitlines() or [""]:
+                lines.append(line)
         # Present actual current conversation in the same format as few-shots
-        if current_history:
+        history_for_block = runtime_history or current_history
+        if history_for_block:
             lines.append("CURRENT CONVERSATION HISTORY:")
-            lines.extend(_render_history_lines(current_history))
+            lines.extend(_render_history_lines(history_for_block))
         lines.append("- input:")
         for line in str(user_input).splitlines() or [""]:
             lines.append("    " + line)

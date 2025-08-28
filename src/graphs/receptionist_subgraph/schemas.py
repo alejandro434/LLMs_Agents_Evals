@@ -1,4 +1,4 @@
-"""Router submodule for the workflow graph.
+"""Receptionist submodule for the workflow graph.
 
 uv run -m src.graphs.receptionist_subgraph.schemas
 """
@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Literal
 
 from langgraph.graph import MessagesState
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class ReceptionistOutputSchema(BaseModel):
@@ -30,6 +30,7 @@ class ReceptionistOutputSchema(BaseModel):
     user_current_address: str | None = Field(
         default=None,
         description="The user's current residential address.",
+        validation_alias=AliasChoices("user_current_address", "user_address"),
     )
     user_employment_status: (
         Literal["employed", "unemployed", "self-employed", "retired"] | None
@@ -54,38 +55,37 @@ class ReceptionistOutputSchema(BaseModel):
         description="A summary of the user's career interests, needs, and preferences (e.g., industry, role type, salary expectations, location).",
     )
 
-    handoff_needed: bool = Field(
-        default=False,
-        description=(
-            "Whether a handoff to a human or another subgraph is needed. "
-            "If true, the handoff_subgraph is used. "
-            "If false, the direct_response_to_the_user is used."
-        ),
-    )
-
     @property
-    def is_valid_state(self) -> bool:
-        """Checks.
+    def at_least_one_user_profile_field_is_filled(self) -> bool:
+        """Return True if at least one user profile field is present and filled.
 
-        for a valid output state: either a direct response exists
-        or a handoff is needed, but not both.
+        Checked fields:
+        - user_name
+        - user_current_address
+        - user_employment_status
+        - user_last_job
+        - user_last_job_location
+        - user_last_job_company
+        - user_job_preferences
+
+        "Filled" means non-None and, for strings, non-empty after stripping.
         """
-        return (self.direct_response_to_the_user is not None) != self.handoff_needed
-
-    @model_validator(mode="after")
-    def _validate_xor_state(self) -> ReceptionistOutputSchema:
-        """Enforce XOR between direct response and handoff flags.
-
-        Exactly one of `direct_response_to_the_user` and `handoff_needed` must
-        indicate the path: either provide a direct response (non-null) with no
-        handoff, or no direct response with a handoff.
-        """
-        if self.is_valid_state:
-            return self
-        raise ValueError(
-            "Exactly one of 'direct_response_to_the_user' (non-null) or "
-            "'handoff_needed' (True) must be set."
+        candidates = (
+            self.user_name,
+            self.user_current_address,
+            self.user_employment_status,
+            self.user_last_job,
+            self.user_last_job_location,
+            self.user_last_job_company,
+            self.user_job_preferences,
         )
+        for value in candidates:
+            if isinstance(value, str):
+                if value.strip():
+                    return True
+            elif value is not None:
+                return True
+        return False
 
     @property
     def user_info_complete(self) -> bool:
@@ -117,7 +117,11 @@ class UserProfileSchema(BaseModel):
 
     name: str | None = Field(default=None, description="The user's name.")
     current_address: str | None = Field(
-        default=None, description="The user's current residential address."
+        default=None,
+        description="The user's current residential address.",
+        validation_alias=AliasChoices(
+            "current_address", "user_current_address", "user_address"
+        ),
     )
     employment_status: (
         Literal["employed", "unemployed", "self-employed", "retired"] | None
@@ -161,7 +165,6 @@ class ReceptionistSubgraphState(MessagesState):
     receptionist_output_schema: ReceptionistOutputSchema = Field(
         default_factory=ReceptionistOutputSchema
     )
-    handoff_needed: bool = Field(default=False)
     user_profile_schema: UserProfileSchema = Field(default_factory=UserProfileSchema)
     fallback_message: str | None = Field(default=None)
 
@@ -170,54 +173,16 @@ if __name__ == "__main__":
     # Simple, side-effect-safe tests and demonstrations
     print("Running ReceptionistOutputSchema simple tests...")
 
-    # 1) Valid: direct response present, no handoff
-    a = ReceptionistOutputSchema(
-        direct_response_to_the_user="Here is your answer.",
-        handoff_needed=False,
-    )
-    if not a.is_valid_state:
-        raise AssertionError("Expected valid state when direct response is present")
-
-    # 2) Valid: no direct response, handoff required
-    b = ReceptionistOutputSchema(
-        direct_response_to_the_user=None,
-        handoff_needed=True,
-    )
-    if not b.is_valid_state:
-        raise AssertionError("Expected valid state when handoff is required")
-
-    # 3) Invalid: neither direct response nor handoff
-    try:
-        ReceptionistOutputSchema(
-            direct_response_to_the_user=None,
-            handoff_needed=False,
-        )
-        raise AssertionError("Expected ValueError for invalid XOR state (none)")
-    except ValueError:
-        pass
-
-    # 4) Invalid: both direct response and handoff
-    try:
-        ReceptionistOutputSchema(
-            direct_response_to_the_user="Text",
-            handoff_needed=True,
-        )
-        raise AssertionError("Expected ValueError for invalid XOR state (both)")
-    except ValueError:
-        pass
-
-    # 5) user_info_complete should be False by default
+    # user_info_complete should be False by default
     c = ReceptionistOutputSchema(
         direct_response_to_the_user=None,
-        handoff_needed=True,
     )
     if c.user_info_complete is not False:
         raise AssertionError("Expected incomplete user info by default")
 
-    # 6) user_info_complete True when all user fields are provided
+    # user_info_complete True when all user fields are provided
     d = ReceptionistOutputSchema(
         direct_response_to_the_user=None,
-        handoff_needed=True,
         user_name="Jane Doe",
         user_current_address="456 Oak St, Rockville, MD",
         user_employment_status="employed",
@@ -228,16 +193,6 @@ if __name__ == "__main__":
     )
     if d.user_info_complete is not True:
         raise AssertionError("Expected complete user info when all fields set")
-
-    # 7) Validator message includes helpful hint
-    try:
-        ReceptionistOutputSchema(
-            direct_response_to_the_user=None,
-            handoff_needed=False,
-        )
-    except ValueError as exc:
-        if "must be set" not in str(exc):
-            raise AssertionError("Expected helpful validator message") from None
 
     print("ReceptionistOutputSchema tests passed.")
 
@@ -276,5 +231,25 @@ if __name__ == "__main__":
         raise AssertionError("Expected incomplete user profile when field missing")
 
     print("UserProfileSchema tests passed.")
+
+    # Pretty print demo using utils
+    from src.utils import format_as_json
+
+    example_state = ReceptionistSubgraphState()
+    print("\nPretty JSON for default ReceptionistSubgraphState:\n")
+    print(format_as_json(example_state))
+
+    # Aliases acceptance tests
+    print("\nRunning alias acceptance tests...")
+    alias_out = ReceptionistOutputSchema(
+        direct_response_to_the_user=None,
+        user_address="123 Main St",
+    )
+    if alias_out.user_current_address != "123 Main St":
+        raise AssertionError("Alias 'user_address' not mapped to user_current_address")
+
+    alias_profile = UserProfileSchema(user_address="456 Oak St")
+    if alias_profile.current_address != "456 Oak St":
+        raise AssertionError("Alias 'user_address' not mapped to current_address")
 
 # %%

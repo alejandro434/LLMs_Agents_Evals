@@ -18,7 +18,6 @@ Receptionist_user_conversations:
                     cash handling, customer service, and weekend availability. Would you
                     like me to prioritize Target and Safeway, or add a pharmacy like
                     Walgreens?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I want a remote software engineering role."
@@ -37,7 +36,6 @@ Receptionist_user_conversations:
                     preference, target Stripe, Datadog, Notion, Snowflake, and OpenAI. I can
                     craft bullets on distributed systems and production services at Atlassian.
                     Should I begin with Stripe and Datadog, or add Snowflake platform teams?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm seeking a hospital nursing job."
@@ -56,7 +54,6 @@ Receptionist_user_conversations:
                     Rush, and Advocate Aurora. I can tune your resume around telemetry
                     monitoring, EMR proficiency, and patient ratios. Should I prioritize
                     Northwestern first and set alerts for Rush and Advocate?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "Looking for full-time warehouse work."
@@ -75,7 +72,6 @@ Receptionist_user_conversations:
                     apply to Amazon Sort Centers, FedEx Ground, UPS, and 3PLs like XPO. I can
                     highlight OSHA safety, palletization, and PIT certification on your
                     resume. Shall I start with Amazon and FedEx Ground?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm a teacher looking for a new role."
@@ -94,7 +90,6 @@ Receptionist_user_conversations:
                     Miami, Somerset Academy, and Mater Academy. I can emphasize outcomes (test
                     score gains) and classroom management. Should I prepare versions of your
                     resume for KIPP and Somerset first?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm a graphic designer seeking remote roles."
@@ -112,7 +107,6 @@ Receptionist_user_conversations:
                     For remote brand design, target Figma, Zapier, Shopify, and GitLab. I can
                     showcase your Canva projects, component libraries, and accessibility work.
                     Want me to draft a portfolio email for Figma and Shopify?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm retired and want part-time consulting."
@@ -131,7 +125,6 @@ Receptionist_user_conversations:
                     shops, and consultancies like Alvarez & Marsal. I can position your Boeing
                     experience toward process improvement and vendor coordination. Should I
                     start outreach to three Seattle suppliers?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "Looking for construction carpentry work."
@@ -149,7 +142,6 @@ Receptionist_user_conversations:
                     Check union halls (Carpenters Local) and contractors like Mortenson and JE
                     Dunn in Denver. I can tune your resume for framing, finish carpentry, and
                     OSHA-10. Want me to pull current bids and apprenticeships to target?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm exploring tech sales roles."
@@ -167,7 +159,6 @@ Receptionist_user_conversations:
                     For NYC SaaS SDR roles, target HubSpot, Outreach, Datadog, and MongoDB. I
                     can stress customer discovery from Best Buy and pipeline discipline. Should
                     I start with HubSpot and Datadog applications?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm seeking a data analyst position."
@@ -185,7 +176,6 @@ Receptionist_user_conversations:
                     Apply to Fidelity, State Street, Capital One, and Klarna analytics teams. I
                     will highlight cohort analysis, SQL performance tuning, and dashboards.
                     Would you like me to focus on Capital One and Fidelity first?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "Looking for hospitality front-desk jobs."
@@ -204,7 +194,6 @@ Receptionist_user_conversations:
                     Hollywood. I'll emphasize customer service, POS, and conflict resolution
                     from your server role. Shall I start with Hilton Garden Inn and one
                     boutique property?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm seeking manufacturing assembly work."
@@ -222,7 +211,6 @@ Receptionist_user_conversations:
                     Apply to Ford, Stellantis, and Magna plants near Dearborn. I can emphasize
                     torque specs, quality checks, and safety. Want me to queue applications for
                     Ford and Magna first?
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm in Rockville, MD and looking for biotech QA roles."
@@ -241,7 +229,6 @@ Receptionist_user_conversations:
 
                     Resources (Maryland):
                     {RESOURCES_IN_MARYLAND}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm in Annapolis, MD seeking hospitality corporate roles."
@@ -258,7 +245,6 @@ Receptionist_user_conversations:
 
                     Resources (Maryland):
                     {RESOURCES_IN_MARYLAND}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "From Linthicum, MD—interested in entry-level defense manufacturing."
@@ -275,7 +261,6 @@ Receptionist_user_conversations:
 
                     Resources (Maryland):
                     {RESOURCES_IN_MARYLAND}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm in Arlington, VA exploring cybersecurity and consulting."
@@ -292,7 +277,6 @@ Receptionist_user_conversations:
 
                     Resources (Virginia):
                     {RESOURCES_IN_VIRGINIA}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "Hello from Alexandria, VA—marketing/analytics corporate roles interest me."
@@ -309,7 +293,6 @@ Receptionist_user_conversations:
 
                     Resources (Virginia):
                     {RESOURCES_IN_VIRGINIA}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "From Norfolk, VA—seeking energy/utilities field roles."
@@ -326,7 +309,6 @@ Receptionist_user_conversations:
 
                     Resources (Virginia):
                     {RESOURCES_IN_VIRGINIA}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "Hi! I'm in Baltimore, MD and looking for job programs."
@@ -346,7 +328,6 @@ Receptionist_user_conversations:
 
                     Resources (Maryland):
                     {RESOURCES_IN_MARYLAND}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "Hello from Bethesda, MD—seeking education admin roles."
@@ -364,7 +345,6 @@ Receptionist_user_conversations:
 
                     Resources (Maryland):
                     {RESOURCES_IN_MARYLAND}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "Hey—I'm in Richmond, VA looking for programs to upskill."
@@ -381,7 +361,6 @@ Receptionist_user_conversations:
 
                     Resources (Virginia):
                     {RESOURCES_IN_VIRGINIA}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "Hi from McLean, VA—I'm exploring tech and consulting."
@@ -399,7 +378,6 @@ Receptionist_user_conversations:
 
                     Resources (Virginia):
                     {RESOURCES_IN_VIRGINIA}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "I'm in Silver Spring, MD—interested in apprenticeships in the trades."
@@ -416,7 +394,6 @@ Receptionist_user_conversations:
 
                     Resources (Maryland):
                     {RESOURCES_IN_MARYLAND}
-              handoff_needed: false
 
       - Conversation_history:
               - human: "From Newport News, VA—I'd like shipbuilding apprenticeships."
@@ -433,4 +410,3 @@ Receptionist_user_conversations:
 
                     Resources (Virginia):
                     {RESOURCES_IN_VIRGINIA}
-              handoff_needed: false
