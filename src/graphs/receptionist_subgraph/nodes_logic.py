@@ -162,7 +162,7 @@ async def validate_user_profile(
     return Command(goto="receptor", update={"messages": [user_answer]})
 
 
-async def handoff_to_logging(
+async def handoff_to_agent(
     state: ReceptionistSubgraphState,
 ) -> Command[Literal[END]]:
     """Handoff to logging node.
@@ -188,7 +188,18 @@ async def handoff_to_logging(
             # Log warning but still proceed - downstream agents can handle incomplete data
             print("Warning: User profile validation failed. Missing fields in profile.")
 
-        return Command(goto=END, update={"user_profile_schema": user_profile})
+        user_request = await user_request_extraction_chain.ainvoke(state["messages"])
+        agent_selection = await agent_selection_chain.ainvoke(user_request.task)
+
+        return Command(
+            goto=END,
+            update={
+                "user_profile_schema": user_profile,
+                "user_request": user_request,
+                "selected_agent": agent_selection.agent_name,
+                "rationale_of_the_handoff": agent_selection.rationale_of_the_handoff,
+            },
+        )
 
     except Exception as e:
         # In case of profiling failure, create a minimal profile from available data

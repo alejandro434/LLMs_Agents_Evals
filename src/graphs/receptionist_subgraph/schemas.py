@@ -186,7 +186,11 @@ class ReceptionistSubgraphState(MessagesState):
     receptionist_output_schema: ReceptionistOutputSchema = Field(
         default_factory=ReceptionistOutputSchema
     )
-    user_profile_schema: UserProfileSchema = Field(default_factory=UserProfileSchema)
+    user_profile: UserProfileSchema = Field(default_factory=UserProfileSchema)
+    user_request: str | None = Field(default=None)
+    selected_agent: Literal["react"] | None = Field(default=None)
+    rationale_of_the_handoff: str | None = Field(default=None)
+
     fallback_message: str | None = Field(default=None)
 
 
