@@ -202,7 +202,7 @@ async def handoff_to_agent(
         return Command(
             goto=END,
             update={
-                "user_profile_schema": user_profile,
+                "user_profile": user_profile,
                 "user_request": user_request,
                 "selected_agent": agent_selection.agent_name,
                 "rationale_of_the_handoff": agent_selection.rationale_of_the_handoff,
@@ -226,7 +226,7 @@ async def handoff_to_agent(
             job_preferences=receptionist_output.user_job_preferences,
         )
 
-        return Command(goto=END, update={"user_profile_schema": fallback_profile})
+        return Command(goto=END, update={"user_profile": fallback_profile})
 
 
 if __name__ == "__main__":
