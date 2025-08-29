@@ -24,6 +24,7 @@ dependencies = [
     "langgraph-checkpoint-sqlite>=2.0.11",
     "pycryptodome>=3.23.0",
     "agentevals>=0.0.9",
+    "langchain-tavily>=0.2.11",
 ]
 
 [tool.ruff]

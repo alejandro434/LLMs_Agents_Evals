@@ -1,0 +1,8 @@
+suggest_relevant_tools_examples:
+  - input: Find job fairs events in the next 30 days in the state of Maryland
+  - output:
+      Guide on which tools may be useful: >
+        Use Google Search to find job fairs events in the next 30 days in the state of Maryland.
+
+        Resources (Google Search):
+        {RESOURCES_IN_GOOGLE_SEARCH}
