@@ -5,6 +5,7 @@ uv run -m src.graphs.concierge_workflow
 
 # %%
 import uuid
+from pprint import pprint
 from typing import Literal
 
 from langgraph.checkpoint.memory import MemorySaver
@@ -91,7 +92,7 @@ if __name__ == "__main__":
                 stream_mode="updates",
                 debug=False,  # Turn off debug for cleaner output
             ):
-                print(update)
+                pprint(update)
 
     asyncio.run(test_subgraph_async_streaming())
     # %%
