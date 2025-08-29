@@ -27,7 +27,7 @@ tool_list = [websearch_tool]
 
 async def tools_advisor_node(
     state: ReActSubgraphState,
-) -> Command[Literal["react_node"]]:
+) -> Command[Literal["react_node", END]]:
     """ReAct node."""
     task = state.get("task")
     user_profile = state.get("user_profile")
@@ -45,7 +45,7 @@ async def tools_advisor_node(
         runtime_context_injection=context_injection,
     )
     return Command(
-        goto=END,
+        goto="react_node",
         update={
             "suggested_tools": tools_advisor_response.suggested_tools,
             "tools_advisor_reasoning": tools_advisor_response.tools_advisor_reasoning,
@@ -63,10 +63,10 @@ async def react_node(state: ReActSubgraphState) -> Command[Literal[END]]:
     The task you have to execute is: {task}
     The user's profile is: {user_profile}
     The reason why you can help the user is: {why_this_agent_can_help}
-    The suggested tools are: {suggested_tools.suggested_tools}
-    The reasoning for why these tools may be relevant is: {suggested_tools.tools_advisor_reasoning}
+    The suggested tools are: {suggested_tools}
+    The reasoning for why these tools may be relevant is: {state.get("tools_advisor_reasoning")}
     """
-    react_response = react_chain.invoke({"messages": [react_input]})
+    react_response = await react_chain.ainvoke({"messages": [react_input]})
     return Command(
         goto=END,
         update={"final_answer": react_response["structured_response"].final_answer},

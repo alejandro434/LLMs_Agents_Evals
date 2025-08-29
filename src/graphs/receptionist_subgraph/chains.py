@@ -37,11 +37,25 @@ def get_receptionist_chain(
 ):
     """Construct the receptionist structured-output chain.
 
-    current_history: optional conversation history to include in the prompt.
+    Args:
+        k: Number of few-shot examples to include
+        temperature: LLM temperature for response generation
+        current_history: Optional conversation history to include in the prompt
+
+    Returns:
+        A structured chain configured for receptionist tasks
+
+    Raises:
+        FileNotFoundError: If system prompt or fewshots file not found
+        yaml.YAMLError: If YAML files are malformed
     """
-    system_prompt = _load_system_prompt(
-        "system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST"
-    )
+    try:
+        system_prompt = _load_system_prompt(
+            "system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST"
+        )
+    except (FileNotFoundError, yaml.YAMLError) as e:
+        raise RuntimeError(f"Failed to load receptionist system prompt: {e}") from e
+
     return build_structured_chain(
         system_prompt=system_prompt,
         output_schema=ReceptionistOutputSchema,
@@ -59,10 +73,29 @@ def get_profiling_chain(
     k: int = 5,
     temperature: float = 0,
 ):
-    """Construct the profiling structured-output chain (field mapping)."""
-    system_prompt = _load_system_prompt(
-        "profiling_system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST_PROFILING"
-    )
+    """Construct the profiling structured-output chain (field mapping).
+
+    This chain maps ReceptionistOutputSchema fields to UserProfileSchema fields
+    in a strict 1:1 manner without inference or hallucination.
+
+    Args:
+        k: Number of few-shot examples to include
+        temperature: LLM temperature (should be 0 for deterministic mapping)
+
+    Returns:
+        A structured chain configured for profile field mapping
+
+    Raises:
+        FileNotFoundError: If system prompt or fewshots file not found
+        yaml.YAMLError: If YAML files are malformed
+    """
+    try:
+        system_prompt = _load_system_prompt(
+            "profiling_system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST_PROFILING"
+        )
+    except (FileNotFoundError, yaml.YAMLError) as e:
+        raise RuntimeError(f"Failed to load profiling system prompt: {e}") from e
+
     return build_structured_chain(
         system_prompt=system_prompt,
         output_schema=UserProfileSchema,

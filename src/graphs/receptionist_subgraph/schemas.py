@@ -143,8 +143,15 @@ class UserProfileSchema(BaseModel):
     )
 
     @property
-    def user_info_complete(self) -> bool:
-        """Checks if the user info is complete."""
+    def is_valid(self) -> bool:
+        """Checks if the user profile is valid (all required fields present).
+
+        This property is used to validate that the profiling chain successfully
+        mapped all required fields from ReceptionistOutputSchema.
+
+        Returns:
+            bool: True if all required fields are not None, False otherwise.
+        """
         return all(
             value is not None
             for value in (
@@ -156,6 +163,20 @@ class UserProfileSchema(BaseModel):
                 self.last_job_company,
                 self.job_preferences,
             )
+        )
+
+    @property
+    def profile_summary(self) -> str:
+        """Generate a summary of the user profile for logging/debugging.
+
+        Returns:
+            str: A formatted summary of the user profile.
+        """
+        return (
+            f"User: {self.name or 'Unknown'}, "
+            f"Location: {self.current_address or 'Unknown'}, "
+            f"Status: {self.employment_status or 'Unknown'}, "
+            f"Last Job: {self.last_job or 'Unknown'} at {self.last_job_company or 'Unknown'}"
         )
 
 
@@ -196,15 +217,15 @@ if __name__ == "__main__":
 
     print("ReceptionistOutputSchema tests passed.")
 
-    # UserProfileSchema: user_info_complete property
+    # UserProfileSchema: is_valid property
     print("Running UserProfileSchema simple tests...")
 
-    # 1) Default: incomplete
+    # 1) Default: invalid
     up_a = UserProfileSchema()
-    if up_a.user_info_complete is not False:
-        raise AssertionError("Expected incomplete user profile by default")
+    if up_a.is_valid is not False:
+        raise AssertionError("Expected invalid user profile by default")
 
-    # 2) Fully populated: complete
+    # 2) Fully populated: valid
     up_b = UserProfileSchema(
         name="Jane Doe",
         current_address="456 Oak St, Rockville, MD",
@@ -214,10 +235,11 @@ if __name__ == "__main__":
         last_job_company="Starbucks",
         job_preferences="Full-time admin roles in Montgomery County",
     )
-    if up_b.user_info_complete is not True:
-        raise AssertionError("Expected complete user profile when all fields set")
+    if up_b.is_valid is not True:
+        raise AssertionError("Expected valid user profile when all fields set")
+    print(f"Profile summary: {up_b.profile_summary}")
 
-    # 3) Missing one field: incomplete
+    # 3) Missing one field: invalid
     up_c = UserProfileSchema(
         name="Jane Doe",
         current_address="456 Oak St, Rockville, MD",
@@ -227,8 +249,8 @@ if __name__ == "__main__":
         last_job_company=None,
         job_preferences="Full-time admin roles in Montgomery County",
     )
-    if up_c.user_info_complete is not False:
-        raise AssertionError("Expected incomplete user profile when field missing")
+    if up_c.is_valid is not False:
+        raise AssertionError("Expected invalid user profile when field missing")
 
     print("UserProfileSchema tests passed.")
 
