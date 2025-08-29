@@ -1,0 +1,100 @@
+Agent_selection_examples:
+  - input: "Search for and provide information about job fairs happening in the user's area within the next month"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent with web search can find current job fair events, dates, locations, and registration information in the user's area"
+
+  - input: "Search for remote software engineering job positions that match the user's qualifications"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search job boards and company websites for current remote software engineering openings"
+
+  - input: "Find and list available training programs for healthcare workers in Maryland"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search for healthcare training programs, schools, and certification courses available in Maryland"
+
+  - input: "Search for entry-level retail job opportunities in or near Arlington, VA"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search multiple job sites and company pages for current retail openings in the Arlington area"
+
+  - input: "Provide comprehensive information about unemployment benefits eligibility, application process, and requirements in Virginia"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search official Virginia government sites and resources for current unemployment benefit information"
+
+  - input: "Find warehouse job positions with hourly pay rates exceeding $20 per hour"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search job listings and filter for warehouse positions meeting the specified pay requirements"
+
+  - input: "Search for and provide information about vocational schools offering HVAC training programs"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can find vocational schools, trade schools, and community colleges with HVAC certification programs"
+
+  - input: "Search for current government job openings in the Washington DC metropolitan area"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search USAJobs and other government job portals for federal positions in the DC area"
+
+  - input: "Search for part-time job opportunities with evening shifts available in Baltimore, MD"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search job boards for part-time positions in Baltimore that offer evening schedules"
+
+  - input: "Find and provide information about professional certification programs for IT professionals"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search for IT certifications, training providers, and exam information from various sources"
+
+  - input: "Search for companies currently hiring for customer service positions"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can identify companies with open customer service roles through job boards and company career pages"
+
+  - input: "Provide resources and information specifically designed to help veterans transition to civilian careers"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can find veteran career transition programs, resources, and organizations that assist with civilian employment"
+
+  - input: "Find available apprenticeship programs in the construction industry"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search for construction apprenticeships through unions, trade organizations, and apprenticeship databases"
+
+  - input: "Search for nursing job openings at hospitals in the user's local area"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search hospital websites and healthcare job boards for current nursing positions"
+
+  - input: "Search for and recommend online courses and training programs for digital marketing"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can find online learning platforms, courses, and certifications for digital marketing skills"
+
+  - input: "Locate and provide information about job placement agencies operating in Silver Spring, MD"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search for staffing agencies, recruitment firms, and employment services in Silver Spring"
+
+  - input: "Search for seasonal retail employment opportunities for the holiday season"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can find retailers hiring seasonal workers and holiday job opportunities"
+
+  - input: "Locate professional resume writing services in the user's area"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search for local resume writing services, career coaches, and professional resume writers"
+
+  - input: "Search for technology startup companies currently hiring in Virginia"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search startup job boards, AngelList, and company websites for tech startup opportunities in Virginia"
+
+  - input: "Provide comprehensive information about obtaining a Commercial Driver's License (CDL) including requirements, training, and testing"
+    output:
+      agent_name: "react"
+      rationale_of_the_handoff: "The ReAct agent can search for CDL requirements, training schools, and testing information from DMV and trucking resources"

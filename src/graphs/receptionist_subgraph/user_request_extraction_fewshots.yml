@@ -1,0 +1,80 @@
+User_request_extraction_examples:
+  - input: "I need to find job fairs happening in my area next month"
+    output:
+      task: "Search for and provide information about job fairs happening in the user's area within the next month"
+
+  - input: "Can you help me look for remote software engineering positions?"
+    output:
+      task: "Search for remote software engineering job positions that match the user's qualifications"
+
+  - input: "I want to know what training programs are available for healthcare workers in Maryland"
+    output:
+      task: "Find and list available training programs for healthcare workers in Maryland"
+
+  - input: "Help me find entry-level retail jobs near Arlington, VA"
+    output:
+      task: "Search for entry-level retail job opportunities in or near Arlington, VA"
+
+  - input: "I'm looking for information about unemployment benefits in Virginia"
+    output:
+      task: "Provide comprehensive information about unemployment benefits eligibility, application process, and requirements in Virginia"
+
+  - input: "Can you search for warehouse jobs that pay over $20 per hour?"
+    output:
+      task: "Find warehouse job positions with hourly pay rates exceeding $20 per hour"
+
+  - input: "I need help finding vocational schools that offer HVAC training"
+    output:
+      task: "Search for and provide information about vocational schools offering HVAC training programs"
+
+  - input: "Show me government job openings in the DC area"
+    output:
+      task: "Search for current government job openings in the Washington DC metropolitan area"
+
+  - input: "I want to find part-time evening jobs in Baltimore"
+    output:
+      task: "Search for part-time job opportunities with evening shifts available in Baltimore, MD"
+
+  - input: "Help me look up certification programs for IT professionals"
+    output:
+      task: "Find and provide information about professional certification programs for IT professionals"
+
+  - input: "Can you find companies hiring for customer service roles?"
+    output:
+      task: "Search for companies currently hiring for customer service positions"
+
+  - input: "I need information about career change resources for veterans"
+    output:
+      task: "Provide resources and information specifically designed to help veterans transition to civilian careers"
+
+  - input: "Search for apprenticeship programs in construction"
+    output:
+      task: "Find available apprenticeship programs in the construction industry"
+
+  - input: "What nursing jobs are available at local hospitals?"
+    output:
+      task: "Search for nursing job openings at hospitals in the user's local area"
+
+  - input: "I want to find online courses for digital marketing"
+    output:
+      task: "Search for and recommend online courses and training programs for digital marketing"
+
+  - input: "Help me find job placement agencies in Silver Spring"
+    output:
+      task: "Locate and provide information about job placement agencies operating in Silver Spring, MD"
+
+  - input: "Can you look for seasonal retail jobs for the holidays?"
+    output:
+      task: "Search for seasonal retail employment opportunities for the holiday season"
+
+  - input: "I need to find resume writing services near me"
+    output:
+      task: "Locate professional resume writing services in the user's area"
+
+  - input: "Show me tech startups that are hiring in Virginia"
+    output:
+      task: "Search for technology startup companies currently hiring in Virginia"
+
+  - input: "I want information about getting a CDL license"
+    output:
+      task: "Provide comprehensive information about obtaining a Commercial Driver's License (CDL) including requirements, training, and testing"

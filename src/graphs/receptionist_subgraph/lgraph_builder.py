@@ -13,7 +13,7 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import START, StateGraph
 
 from src.graphs.receptionist_subgraph.nodes_logic import (
-    handoff_to_logging,
+    handoff_to_agent,
     receptor,
     validate_user_profile,
 )
@@ -28,7 +28,7 @@ builder.add_node("receptor", receptor)  # Extracts user info from messages
 builder.add_node(
     "validate_user_profile", validate_user_profile
 )  # Validates completeness
-builder.add_node("handoff_to_logging", handoff_to_logging)  # Maps to UserProfileSchema
+builder.add_node("handoff_to_agent", handoff_to_agent)  # Maps to UserProfileSchema
 
 # Define the entry point
 builder.add_edge(START, "receptor")
@@ -37,9 +37,9 @@ builder.add_edge(START, "receptor")
 # 1. START -> receptor: Always starts here
 # 2. receptor -> validate_user_profile: Always goes here after extraction
 # 3. validate_user_profile has two paths:
-#    a. -> handoff_to_logging: If user_info_complete is True
+#    a. -> handoff_to_agent: If user_info_complete is True
 #    b. -> receptor: If more info needed (with interrupt for user input)
-# 4. handoff_to_logging -> END: Completes the subgraph
+# 4. handoff_to_agent -> END: Completes the subgraph
 
 graph_with_in_memory_checkpointer = builder.compile(checkpointer=MemorySaver())
 
