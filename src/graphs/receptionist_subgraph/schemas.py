@@ -183,6 +183,8 @@ class UserProfileSchema(BaseModel):
 class ReceptionistSubgraphState(MessagesState):
     """Receptionist subgraph state."""
 
+    direct_response_to_the_user: str | None = Field(default=None)
+
     receptionist_output_schema: ReceptionistOutputSchema = Field(
         default_factory=ReceptionistOutputSchema
     )

@@ -122,7 +122,10 @@ async def receptor(
 
     return Command(
         goto="validate_user_profile",
-        update={"receptionist_output_schema": response},
+        update={
+            "receptionist_output_schema": response,
+            "direct_response_to_the_user": response.direct_response_to_the_user,
+        },
     )
 
 
@@ -161,7 +164,10 @@ async def validate_user_profile(
         )
 
     user_answer = interrupt(response_to_user)
-    return Command(goto="receptor", update={"messages": [user_answer]})
+    return Command(
+        goto="receptor",
+        update={"messages": [user_answer]},
+    )
 
 
 async def handoff_to_agent(
