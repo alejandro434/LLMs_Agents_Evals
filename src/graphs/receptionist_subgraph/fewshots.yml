@@ -1,15 +1,19 @@
 Receptionist_user_conversations:
       - Conversation_history:
-              - human: "Hi, I'm looking for an entry-level retail job."
-              - ai: "Happy to help. What's your name and current address?"
-              - human: "I'm Emily Clark. I live at 221 Pine St, Seattle, WA."
-              - ai: "Thanks, Emily. What's your current employment status?"
-              - human: "Unemployed."
-              - ai: "What was your last job, company, and location?"
-              - human: "Barista at Starbucks in Seattle."
-              - ai: "Any job preferences like schedule, pay, or role type?"
-              - human: "Part-time retail near me, weekends OK."
-        input: "Can you suggest where I should apply first?"
+              - human: "hey just graduated and need to find work asap"
+              - ai: "Congrats on graduating! I'd love to help you find work. What's your name?"
+              - human: "oh sorry, I'm Emily Clark"
+              - ai: "Nice to meet you Emily! Where are you located? That'll help me find jobs near you."
+              - human: "I'm in Seattle, 221 Pine St area"
+              - ai: "Great, Seattle has lots of opportunities! Since you just graduated, I'm guessing you're currently unemployed?"
+              - human: "yeah exactly, need something soon"
+              - ai: "I understand the urgency. What was your most recent work experience? Even internships or part-time jobs count!"
+              - human: "I worked as a barista at Starbucks while in school"
+              - ai: "Perfect, that customer service experience is valuable! Was that also in Seattle?"
+              - human: "yep same city"
+              - ai: "Excellent. What kind of work are you looking for now? Any preferences on schedule or type of role?"
+              - human: "honestly anything entry-level, retail would be fine, part-time is ok"
+        input: "can you help me find places hiring?"
         output:
               direct_response_to_the_user: >
                     Based on your barista experience in Seattle and interest in part-time
@@ -19,17 +23,119 @@ Receptionist_user_conversations:
                     like me to prioritize Target and Safeway, or add a pharmacy like
                     Walgreens?
 
+      # Example showing complete profile collection then null response
       - Conversation_history:
-              - human: "I want a remote software engineering role."
-              - ai: "Great. What's your name and current address?"
-              - human: "Alex Rivera, 1234 Park Ave, San Francisco, CA."
-              - ai: "Employment status?"
-              - human: "Employed, exploring new roles."
-              - ai: "Your last job, company, and location?"
-              - human: "Senior Software Engineer at Atlassian in San Francisco."
-              - ai: "What preferences do you have (stack, salary, location)?"
-              - human: "Backend (Python, Go), remote US, $150k+."
-        input: "What companies should I target next?"
+              - human: "hi need a job"
+              - ai: "I'm here to help! What's your name?"
+              - human: "Sam"
+              - ai: "Thanks Sam! Where are you located?"
+              - human: "NYC"
+              - ai: "Great! Are you currently employed or looking for work?"
+              - human: "unemployed"
+              - ai: "Got it. What was your last job?"
+              - human: "data analyst at a bank"
+              - ai: "Which bank and where was it located?"
+              - human: "Chase in NYC"
+              - ai: "Perfect! What kind of roles are you looking for?"
+              - human: "data science or analyst roles, remote preferred"
+        input: "find me data jobs"
+        output:
+              direct_response_to_the_user: null # All info collected, handoff to job search
+
+      # Example with user providing info naturally
+      - Conversation_history:
+              - human: "just graduated, need work"
+              - ai: "Congrats on graduating! I'll help you find work. What's your name?"
+              - human: "Jake Thompson"
+              - ai: "Thanks Jake! Where are you located?"
+              - human: "Baltimore, 789 College Ave"
+              - ai: "Great! Since you just graduated, are you currently unemployed?"
+              - human: "yeah, just finished school"
+              - ai: "Got it. Did you have any internships or part-time work recently?"
+              - human: "did an internship at TechStartup here in Baltimore"
+              - ai: "Excellent experience! What kind of roles are you looking for?"
+              - human: "entry level tech stuff, pretty flexible"
+        input: "can you find tech job fairs?"
+        output:
+              direct_response_to_the_user: null # Has all info: name, location, unemployed, intern at TechStartup/Baltimore, wants entry-level tech
+
+      # Example recognizing preferences in requests
+      - Conversation_history:
+              - human: "laid off, need new job"
+              - ai: "Sorry to hear that. Let me help! What's your name?"
+              - human: "Robert Chen"
+              - ai: "Thanks Robert. Where are you located?"
+              - human: "Norfolk VA"
+              - ai: "Got it. What was your last position?"
+              - human: "Senior Engineer at DefenseContractor in Norfolk"
+              - ai: "Great experience! What type of roles interest you?"
+              - human: "senior engineering, defense or aerospace preferred"
+        input: "find defense contractors hiring"
+        output:
+              direct_response_to_the_user: null # Complete: name, location, unemployed (laid off), job/company/location, preferences
+
+      # Career changer example - recognizing preferences immediately
+      - Conversation_history:
+              - human: "thinking about switching careers"
+              - ai: "Exciting! Let me help. What's your name?"
+              - human: "Maria Santos"
+              - ai: "Thanks Maria! Where are you located?"
+              - human: "Richmond, Virginia"
+              - ai: "Great! Are you currently employed?"
+              - human: "yes, still working but want to change"
+              - ai: "What's your current role and company?"
+              - human: "Sales Manager at RetailChain here in Richmond"
+              - ai: "Good experience! What kind of roles interest you?"
+              - human: "project management or operations roles, hybrid would be nice"
+        input: "what PM jobs don't require tons of experience?"
+        output:
+              direct_response_to_the_user: null # Has all fields! Name, location, employed, Sales Manager/RetailChain/Richmond, wants PM/ops hybrid
+
+      # Example showing how to extract info from partial statements
+      - Conversation_history:
+              - human: "need help finding work"
+              - ai: "I'll help you find work! What's your name?"
+              - human: "Robert Chen"
+              - ai: "Thanks Robert! Where are you located?"
+              - human: "Norfolk VA"
+              - ai: "Got it. Are you currently employed?"
+              - human: "unemployed, got laid off"
+              - ai: "Sorry to hear that. What was your last position?"
+              - human: "I was a Senior Engineer at DefenseContractor in Norfolk"
+        input: "looking for senior engineering roles, defense or aerospace"
+        output:
+              direct_response_to_the_user: null # Complete! Has name, location, unemployed, Senior Engineer/DefenseContractor/Norfolk, wants senior eng defense/aerospace
+
+      # Example with info provided naturally in conversation
+      - Conversation_history:
+              - human: "hi looking for work"
+              - ai: "I'd love to help! What's your name?"
+              - human: "Maria"
+              - ai: "Thanks Maria! Where are you located?"
+              - human: "456 Main Street in Richmond, Virginia"
+              - ai: "Great! Are you currently working?"
+              - human: "yeah still working but looking to make a change"
+              - ai: "What's your current job?"
+              - human: "currently I'm a Sales Manager at RetailChain here in Richmond"
+        input: "interested in maybe project management or operations roles"
+        output:
+              direct_response_to_the_user: null # All info present: Maria, Richmond VA, employed, Sales Manager at RetailChain in Richmond, wants PM/ops
+
+      - Conversation_history:
+              - human: "looking for remote software engineering work"
+              - ai: "I can definitely help with that! Let me get some info to find the best matches. What's your name?"
+              - human: "Alex Rivera"
+              - ai: "Thanks Alex! Where are you currently based? This helps even for remote roles."
+              - human: "San Francisco, 1234 Park Ave area"
+              - ai: "Perfect location for tech! Are you currently employed or actively job searching?"
+              - human: "employed but exploring what's out there"
+              - ai: "Smart to explore options! What's your current role and company?"
+              - human: "Senior Software Engineer at Atlassian"
+              - ai: "Excellent company! Is that also in San Francisco?"
+              - human: "yes, their SF office"
+              - ai: "Great experience! What kind of remote roles interest you? Any specific tech stack or requirements?"
+              - human: "backend stuff mainly, Python and Go, hoping for 150k+ and fully remote"
+        input: "what companies should I look at?"
         output:
               direct_response_to_the_user: >
                     Given your senior backend experience in Python and Go with a remote US
@@ -38,16 +144,18 @@ Receptionist_user_conversations:
                     Should I begin with Stripe and Datadog, or add Snowflake platform teams?
 
       - Conversation_history:
-              - human: "I'm seeking a hospital nursing job."
-              - ai: "What's your name and current address?"
-              - human: "Anna Patel, 3400 N Clark St, Chicago, IL."
-              - ai: "Employment status?"
-              - human: "Unemployed."
-              - ai: "Last job, company, and location?"
-              - human: "Registered Nurse at Northwestern Memorial Hospital, Chicago."
-              - ai: "Preferences (shift, unit, pay)?"
-              - human: "Day shift, med-surg or telemetry, full-time."
-        input: "Can you recommend openings I should look at?"
+              - human: "need help finding tech jobs, just got laid off"
+              - ai: "I'm sorry to hear about the layoff, but I'm here to help you bounce back! What's your name?"
+              - human: "Anna Patel"
+              - ai: "Hi Anna, let's find you something great. Where are you located?"
+              - human: "Chicago, near 3400 N Clark St"
+              - ai: "Chicago has a strong tech scene! What was your most recent position?"
+              - human: "Software Developer at a startup called TechFlow"
+              - ai: "Good experience! Was TechFlow also in Chicago?"
+              - human: "yeah, downtown Chicago"
+              - ai: "Perfect. What type of tech roles are you targeting? Any preferences on company size, remote options, or tech stack?"
+              - human: "looking for full-stack or backend roles, prefer remote or hybrid, using Node.js or Python"
+        input: "can you find companies hiring right now?"
         output:
               direct_response_to_the_user: >
                     For day-shift med-surg/telemetry in Chicago, check Northwestern Medicine,

@@ -41,7 +41,18 @@ async def receptor_router(
     state: ConciergeGraphState,
 ) -> Command[Literal[END, "react"]]:
     """Receptor router."""
-    config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    # Use a consistent thread_id for the receptionist subgraph to maintain state
+    # Create a stable thread_id based on the conversation to maintain state across turns
+    # We'll use a hash of the first message or a fixed ID
+    if state.get("messages"):
+        # Use a hash of the first message to create a stable thread_id
+        first_msg = str(state["messages"][0])
+        import hashlib
+
+        thread_hash = hashlib.md5(first_msg.encode()).hexdigest()[:8]
+        config = {"configurable": {"thread_id": f"receptionist_{thread_hash}"}}
+    else:
+        config = {"configurable": {"thread_id": "receptionist_default"}}
 
     response = await receptor_router_subgraph.ainvoke(
         {"messages": state["messages"]}, config
@@ -82,7 +93,17 @@ async def receptor_router(
 
 async def react(state: ConciergeGraphState) -> Command[Literal[END]]:
     """React node."""
-    config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    # Use a consistent thread_id for the react subgraph to maintain state
+    # Create a stable thread_id based on the conversation
+    if state.get("messages"):
+        # Use a hash of the first message to create a stable thread_id
+        first_msg = str(state["messages"][0])
+        import hashlib
+
+        thread_hash = hashlib.md5(first_msg.encode()).hexdigest()[:8]
+        config = {"configurable": {"thread_id": f"react_{thread_hash}"}}
+    else:
+        config = {"configurable": {"thread_id": "react_default"}}
 
     _input = {
         "task": state.get("task"),

@@ -1,8 +1,70 @@
 suggest_relevant_tools_examples:
   - input: Find job fairs events in the next 30 days in the state of Maryland
-  - output:
+    output:
       Guide on which tools may be useful: >
-        Use Google Search to find job fairs events in the next 30 days in the state of Maryland.
+        I'll help you find upcoming job fairs in Maryland! Let me search for:
+        1. "Maryland job fairs January 2024" to find specific events
+        2. "Baltimore Washington DC job fairs next 30 days" for regional opportunities
+        3. "Maryland virtual job fairs 2024" for online options
+
+        I'll also check major job boards like Indeed, Monster, and Maryland Workforce Exchange
+        for their event calendars. This will give you a comprehensive list of opportunities.
+
+        Resources (Google Search):
+        {RESOURCES_IN_GOOGLE_SEARCH}
+
+  - input: Find remote junior developer positions available
+    output:
+      Guide on which tools may be useful: >
+        Great! I'll search for remote junior developer opportunities for you:
+        1. "remote junior developer jobs hiring now 2024" for current openings
+        2. "entry level software engineer remote positions" for broader results
+        3. "companies hiring bootcamp graduates remote" if you're a recent grad
+
+        I'll check AngelList, RemoteOK, We Work Remotely, and FlexJobs for the best remote-first companies.
+        Also searching for companies known for hiring juniors like Shopify, GitLab, and Automattic.
+
+        Resources (Google Search):
+        {RESOURCES_IN_GOOGLE_SEARCH}
+
+  - input: What companies are hiring new grads for software roles
+    output:
+      Guide on which tools may be useful: >
+        I'll find companies actively recruiting new grads! Searching for:
+        1. "new grad software engineer programs 2024" for structured programs
+        2. "companies hiring entry level developers no experience" for broader opportunities
+        3. "tech companies university recruiting 2024" for campus hire programs
+
+        I'll look for rotational programs at Microsoft, Google, Amazon, Meta, and also check
+        growing companies like Stripe, Databricks, and Roblox that have strong new grad pipelines.
+
+        Resources (Google Search):
+        {RESOURCES_IN_GOOGLE_SEARCH}
+
+  - input: What project manager jobs are out there that don't require tons of experience
+    output:
+      Guide on which tools may be useful: >
+        Let me search for entry-level and transitional PM roles perfect for career changers:
+        1. "entry level project manager jobs no experience required" for accessible roles
+        2. "associate project manager positions hiring" for junior PM opportunities
+        3. "project coordinator to project manager career path" for stepping-stone roles
+
+        I'll focus on companies known for training like Accenture, Deloitte, Capital One,
+        and tech companies with good onboarding programs. Also checking remote options!
+
+        Resources (Google Search):
+        {RESOURCES_IN_GOOGLE_SEARCH}
+
+  - input: Which companies offer good training programs for career changers
+    output:
+      Guide on which tools may be useful: >
+        I'll find companies with excellent career transition programs:
+        1. "companies with career change training programs 2024" for dedicated programs
+        2. "best companies for career switchers tech" for tech transitions
+        3. "corporate training programs entry level hiring" for structured learning paths
+
+        Looking at companies like Google Career Certificates partners, Amazon Career Choice,
+        Microsoft LEAP, and consulting firms with strong training cultures.
 
         Resources (Google Search):
         {RESOURCES_IN_GOOGLE_SEARCH}
