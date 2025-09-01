@@ -66,7 +66,7 @@ if __name__ == "__main__":
         print(f"\nMessages count: {len(result.get('messages', []))}")
         print(f"\nResult keys: {list(result.keys())}")
         print(f"\nReceptionist output: {result.get('receptionist_output_schema', {})}")
-        print(f"\nUser profile: {result.get('user_profile_schema', {})}")
+        print(f"\nUser profile: {result.get('user_profile', {})}")
         print(f"\nFallback message: {result.get('fallback_message')}")
 
         assert "receptionist_output_schema" in result, "Should have receptionist output"
@@ -107,8 +107,8 @@ if __name__ == "__main__":
                             print(
                                 f"    Employment status: {output.user_employment_status}"
                             )
-                    if "user_profile_schema" in node_output:
-                        profile = node_output["user_profile_schema"]
+                    if "user_profile" in node_output:
+                        profile = node_output["user_profile"]
                         if hasattr(profile, "is_valid"):
                             print(f"    User profile validated: {profile.is_valid}")
 
@@ -119,10 +119,10 @@ if __name__ == "__main__":
             print(
                 f"  - Has receptionist output: {'receptionist_output_schema' in final_state.values}"
             )
-            has_user_profile = "user_profile_schema" in final_state.values
+            has_user_profile = "user_profile" in final_state.values
             print(f"  - Has user profile: {has_user_profile}")
             if has_user_profile:
-                profile = final_state.values.get("user_profile_schema")
+                profile = final_state.values.get("user_profile")
                 if hasattr(profile, "is_valid"):
                     print(f"  - User profile valid: {profile.is_valid}")
             print("\n✅ Streaming test passed!")
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
         # Check results
         receptionist_output = result.get("receptionist_output_schema", {})
-        user_profile = result.get("user_profile_schema", {})
+        user_profile = result.get("user_profile", {})
 
         print(f"\nDirect response: {receptionist_output.direct_response_to_the_user}")
         print(f"User info complete: {receptionist_output.user_info_complete}")
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         print(f"\nResult keys: {list(result.keys())}")
 
         receptionist_output = result.get("receptionist_output_schema", {})
-        user_profile = result.get("user_profile_schema", {})
+        user_profile = result.get("user_profile", {})
         fallback_message = result.get("fallback_message")
 
         # Print extracted information
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         print(f"\nUser info complete: {receptionist_output.user_info_complete}")
         print(f"Direct response: {receptionist_output.direct_response_to_the_user}")
 
-        if "user_profile_schema" in result and hasattr(user_profile, "is_valid"):
+        if "user_profile" in result and hasattr(user_profile, "is_valid"):
             print(f"User profile validated: {user_profile.is_valid}")
             if hasattr(user_profile, "profile_summary"):
                 print(f"Profile summary: {user_profile.profile_summary}")
@@ -345,8 +345,8 @@ if __name__ == "__main__":
                         )
 
                     # Check if user profile was created
-                    if "user_profile_schema" in result:
-                        profile = result["user_profile_schema"]
+                    if "user_profile" in result:
+                        profile = result["user_profile"]
                         assert profile.is_valid, "User profile should be valid"
                         print("✓ Valid user profile created")
                         print(f"  Profile summary: {profile.profile_summary}")

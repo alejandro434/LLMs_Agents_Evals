@@ -196,6 +196,14 @@ class ReceptionistSubgraphState(MessagesState):
     fallback_message: str | None = Field(default=None)
 
 
+class UserRequestExtractionSchema(BaseModel):
+    """User request extraction schema."""
+
+    task: str = Field(
+        description="The user's request written as a task for an specific agent to perform."
+    )
+
+
 if __name__ == "__main__":
     # Simple, side-effect-safe tests and demonstrations
     print("Running ReceptionistOutputSchema simple tests...")

@@ -13,8 +13,16 @@ Receptionist_user_conversations:
               - human: "yep same city"
               - ai: "Excellent. What kind of work are you looking for now? Any preferences on schedule or type of role?"
               - human: "honestly anything entry-level, retail would be fine, part-time is ok"
-        input: "can you help me find places hiring?"
-        output:
+        last_input_from_user: "can you help me find places hiring?"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Emily Clark
+                    current_address: Seattle, 221 Pine St area
+                    employment_status: unemployed
+                    last_job: barista
+                    last_job_location: Seattle
+                    last_job_company: Starbucks
+                    job_preferences: entry-level retail, part-time
               direct_response_to_the_user: >
                     Based on your barista experience in Seattle and interest in part-time
                     retail near 221 Pine St, good first options are Target, Old Navy, and
@@ -22,6 +30,8 @@ Receptionist_user_conversations:
                     cash handling, customer service, and weekend availability. Would you
                     like me to prioritize Target and Safeway, or add a pharmacy like
                     Walgreens?
+              next_agent: null
+              task_to_handoff_to_the_next_agent: null
 
       # Example showing complete profile collection then null response
       - Conversation_history:
@@ -38,9 +48,23 @@ Receptionist_user_conversations:
               - human: "Chase in NYC"
               - ai: "Perfect! What kind of roles are you looking for?"
               - human: "data science or analyst roles, remote preferred"
-        input: "find me data jobs"
-        output:
-              direct_response_to_the_user: null # All info collected, handoff to job search
+        last_input_from_user: "find me data jobs"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Sam
+                    current_address: NYC
+                    employment_status: unemployed
+                    last_job: data analyst
+                    last_job_location: Chase
+                    last_job_company: Chase
+                    job_preferences: data science or analyst roles, remote preferred
+              direct_response_to_the_user: >
+                    Based on your data analyst experience in Chase and interest in remote
+                    data science or analyst roles, good first options are Google, Amazon, and
+                    Meta. I can tailor a resume highlighting data analysis, SQL, and machine
+                    learning. Would you like me to prioritize Google and Amazon, or add Meta?
+              next_agent: "resume_builder"
+              task_to_handoff_to_the_next_agent: "build a resume for the user"
 
       # Example with user providing info naturally
       - Conversation_history:

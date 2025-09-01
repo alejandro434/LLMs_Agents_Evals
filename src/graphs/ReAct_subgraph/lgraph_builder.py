@@ -12,6 +12,10 @@ from langgraph.graph import END, START, StateGraph
 
 from src.graphs.ReAct_subgraph.nodes_logic import react_node, tools_advisor_node
 from src.graphs.ReAct_subgraph.schemas import ReActSubgraphState
+from src.graphs.receptionist_subgraph.schemas import (
+    UserProfileSchema,
+    UserRequestExtractionSchema,
+)
 
 
 builder = StateGraph(ReActSubgraphState)
@@ -36,8 +40,18 @@ if __name__ == "__main__":
         config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
         test_input = {
-            "task": "Find job fairs events in the next 30 days.",
-            "user_profile": "I am a job seeker looking for a job in the tech industry.",
+            "user_request": UserRequestExtractionSchema(
+                task=("Find in the web job fairs events in the next 30 days.")
+            ),
+            "user_profile": UserProfileSchema(
+                name="John Doe",
+                current_address="123 Main St, Anytown, USA",
+                employment_status="employed",
+                last_job="Software Engineer",
+                last_job_location="Anytown, USA",
+                last_job_company="Acme Corp",
+                job_preferences="Tech roles, full-time",
+            ),
             "why_this_agent_can_help": (
                 "I can help the user find job fairs events in the next 30 days."
             ),
@@ -47,10 +61,13 @@ if __name__ == "__main__":
         result = await graph_with_in_memory_checkpointer.ainvoke(test_input, config)
 
         # Check results
-        print(f"\nTask: {result.get('task')}")
         print(f"\nSuggested Tools: {result.get('suggested_tools')}")
         print(f"\nTools Advisor Reasoning: {result.get('tools_advisor_reasoning')}")
-        print(f"\nFinal Answer: {result.get('final_answer')}")
+        final_answer = result.get("final_answer")
+        if final_answer:
+            print(f"\nFinal Answer: {final_answer}")
+        else:
+            print("\nFinal Answer not available.")
 
         assert result.get("suggested_tools") is not None, "Should have suggested tools"
         assert result.get("tools_advisor_reasoning") is not None, (
@@ -66,8 +83,18 @@ if __name__ == "__main__":
             config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
             test_input = {
-                "task": "Find job fairs events in the next 30 days.",
-                "user_profile": "I am a job seeker looking for a job in the tech industry.",
+                "user_request": UserRequestExtractionSchema(
+                    task=("Find in the web job fairs events in the next 30 days.")
+                ),
+                "user_profile": UserProfileSchema(
+                    name="Jane Smith",
+                    current_address="456 Oak St, Rockville, MD",
+                    employment_status="unemployed",
+                    last_job="Barista",
+                    last_job_location="Rockville, MD",
+                    last_job_company="Starbucks",
+                    job_preferences="Entry-level roles in MD",
+                ),
                 "why_this_agent_can_help": (
                     "I can help the user find job fairs events in the next 30 days."
                 ),
@@ -89,7 +116,7 @@ if __name__ == "__main__":
             # Get final state
             final_state = await react_graph.aget_state(config)
             print("\nFinal state values:")
-            print(f"  - Task: {final_state.values.get('task')}")
+            print(f"  - Has user_request: {'user_request' in final_state.values}")
             print(
                 f"  - Has suggested tools: {final_state.values.get('suggested_tools') is not None}"
             )

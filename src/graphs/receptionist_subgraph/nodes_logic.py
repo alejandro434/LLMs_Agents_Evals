@@ -92,33 +92,7 @@ async def receptor(
 
     except Exception as e:
         # Handle chain invocation errors gracefully
-        print(f"Error in receptionist chain: {e}")
-
-        # Create a response asking for clarification
-        response = ReceptionistOutputSchema(
-            direct_response_to_the_user=(
-                "I'm having trouble understanding. Could you please rephrase "
-                "or provide more details about your employment situation and job preferences?"
-            ),
-            # Preserve any previously extracted fields
-            user_name=prior_schema.user_name if prior_schema else None,
-            user_current_address=prior_schema.user_current_address
-            if prior_schema
-            else None,
-            user_employment_status=prior_schema.user_employment_status
-            if prior_schema
-            else None,
-            user_last_job=prior_schema.user_last_job if prior_schema else None,
-            user_last_job_location=prior_schema.user_last_job_location
-            if prior_schema
-            else None,
-            user_last_job_company=prior_schema.user_last_job_company
-            if prior_schema
-            else None,
-            user_job_preferences=prior_schema.user_job_preferences
-            if prior_schema
-            else None,
-        )
+        print(f"Error in receptionist chain in the receptor node: {e}")
 
     return Command(
         goto="validate_user_profile",
@@ -211,22 +185,7 @@ async def handoff_to_agent(
 
     except Exception as e:
         # In case of profiling failure, create a minimal profile from available data
-        print(f"Error in profiling: {e}. Creating fallback profile.")
-
-        # Create a fallback UserProfileSchema with available data
-        from src.graphs.receptionist_subgraph.schemas import UserProfileSchema
-
-        fallback_profile = UserProfileSchema(
-            name=receptionist_output.user_name,
-            current_address=receptionist_output.user_current_address,
-            employment_status=receptionist_output.user_employment_status,
-            last_job=receptionist_output.user_last_job,
-            last_job_location=receptionist_output.user_last_job_location,
-            last_job_company=receptionist_output.user_last_job_company,
-            job_preferences=receptionist_output.user_job_preferences,
-        )
-
-        return Command(goto=END, update={"user_profile": fallback_profile})
+        print(f"Error in profiling in the handoff_to_agent node: {e}.")
 
 
 if __name__ == "__main__":
@@ -258,8 +217,7 @@ if __name__ == "__main__":
         response = await receptor(state)
         print(format_command(response))
 
-    if os.environ.get("RUN_ADVANCED_RECEPTOR_TEST") == "1":
-        asyncio.run(test_receptor_with_history_and_context())
+    asyncio.run(test_receptor_with_history_and_context())
 
     async def test_receptor_with_structured_history() -> None:
         """Test receptor with dict-based history entries."""
@@ -274,8 +232,7 @@ if __name__ == "__main__":
         response = await receptor(state)
         print(format_command(response))
 
-    if os.environ.get("RUN_ADVANCED_RECEPTOR_TEST") == "1":
-        asyncio.run(test_receptor_with_structured_history())
+    asyncio.run(test_receptor_with_structured_history())
 
     async def test_validate_user_profile_incomplete() -> None:
         """Test validate_user_profile with incomplete profile - should trigger interrupt."""
@@ -325,7 +282,7 @@ if __name__ == "__main__":
         print(format_command(response))
 
         # Validate the response contains expected fields
-        assert response.update.get("user_profile_schema") is not None
+        assert response.update.get("user_profile") is not None
         assert response.update.get("user_request") is not None
         assert response.update.get("selected_agent") == "react"
         assert response.update.get("rationale_of_the_handoff") is not None
@@ -346,7 +303,7 @@ if __name__ == "__main__":
         print(format_command(response))
 
         # Should still produce a valid response even with minimal data
-        assert response.update.get("user_profile_schema") is not None
+        assert response.update.get("user_profile") is not None
         print("✅ handoff_to_agent minimal test passed")
 
     if os.environ.get("RUN_ADVANCED_RECEPTOR_TEST") == "1":
@@ -478,7 +435,7 @@ if __name__ == "__main__":
         response = await handoff_to_agent(state)
 
         # Verify all expected fields are present
-        assert response.update["user_profile_schema"].name == "Alex Chen"
+        assert response.update["user_profile"].name == "Alex Chen"
         assert response.update["user_request"].task is not None
         assert "job fair" in response.update["user_request"].task.lower()
         assert response.update["selected_agent"] == "react"

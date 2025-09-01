@@ -1,7 +1,10 @@
 from langgraph.graph import MessagesState
 from pydantic import BaseModel, Field
 
-from src.graphs.receptionist_subgraph.schemas import UserProfileSchema
+from src.graphs.receptionist_subgraph.schemas import (
+    UserProfileSchema,
+    UserRequestExtractionSchema,
+)
 
 
 class SuggestedRelevantToolsOutputSchema(BaseModel):
@@ -16,11 +19,14 @@ class SuggestedRelevantToolsOutputSchema(BaseModel):
 class ReActSubgraphState(MessagesState):
     """ReAct graph state."""
 
-    task: str = Field(description="The task to be executed")
-    user_profile: UserProfileSchema = Field(description="The user profile")
-
+    user_profile: UserProfileSchema = Field(
+        default_factory=UserProfileSchema, description="The user profile"
+    )
+    user_request: UserRequestExtractionSchema = Field(
+        default_factory=UserRequestExtractionSchema, description="The user request"
+    )
     why_this_agent_can_help: str = Field(
-        description="The reason why you can help the user with the task"
+        default="", description="The reason why you can help the user with the task"
     )
     suggested_tools: list[str] = Field(
         description="The tools that may be useful to help the user with the task"

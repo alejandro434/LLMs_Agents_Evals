@@ -17,6 +17,7 @@ from src.graphs.llm_chains_factory.assembling import (
 from src.graphs.receptionist_subgraph.schemas import (
     ReceptionistOutputSchema,
     UserProfileSchema,
+    UserRequestExtractionSchema,
 )
 
 
@@ -109,15 +110,7 @@ def get_profiling_chain(
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
-
-
-class UserRequestExtractionSchema(BaseModel):
-    """User request extraction schema."""
-
-    task: str = Field(
-        description="The user's request written as a task for an specific agent to perform."
-    )
+from pydantic import BaseModel
 
 
 def get_user_request_extraction_chain(

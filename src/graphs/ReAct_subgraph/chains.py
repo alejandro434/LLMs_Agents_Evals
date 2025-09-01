@@ -99,7 +99,7 @@ if __name__ == "__main__":
     REACT_INPUT = f"""
     The task you have to execute is: {TEST_INPUT.content}
     The suggested tools are: {suggested_tools.suggested_tools}
-    The reasoning for why these tools are relevant is: {suggested_tools.reasoning}
+    The reasoning for why these tools are relevant is: {suggested_tools.tools_advisor_reasoning}
     """
     react_response = react_chain.invoke({"messages": [REACT_INPUT]})
     print("ReAct response:", react_response["structured_response"].final_answer)

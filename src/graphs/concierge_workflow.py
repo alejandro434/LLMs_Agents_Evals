@@ -128,6 +128,8 @@ builder.add_node("react", react)
 
 builder.add_edge(START, "receptor_router")
 graph_with_in_memory_checkpointer = builder.compile(checkpointer=MemorySaver())
+# Export a server-safe graph without a custom checkpointer for LangGraph API
+graph = builder.compile()
 
 if __name__ == "__main__":
     import asyncio
