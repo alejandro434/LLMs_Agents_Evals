@@ -6,7 +6,6 @@ uv run -m src.graphs.ReAct_subgraph.nodes_logic
 
 # %%
 
-from pprint import pprint
 from typing import Literal
 
 from langchain_core.messages import HumanMessage
@@ -33,15 +32,25 @@ async def tools_advisor_node(
     state: ReActSubgraphState,
 ) -> Command[Literal["react_node", END]]:
     """ReAct node."""
-    if (
-        not state.get("user_request")
-        or not state.get("user_profile")
-        or not state.get("why_this_agent_can_help")
-        or not isinstance(state.get("user_profile"), UserProfileSchema)
-    ):
-        raise ValueError(
-            "User request, user profile, and why this agent can help are required"
+    missing_or_invalid: list[str] = []
+    if not state.get("user_request"):
+        missing_or_invalid.append("Tools advisor node: user_request is missing")
+    if not state.get("user_profile"):
+        missing_or_invalid.append("Tools advisor node: user_profile is missing")
+    elif not isinstance(state.get("user_profile"), UserProfileSchema):
+        value_type = type(state.get("user_profile")).__name__
+        missing_or_invalid.append(
+            f"Tools advisor node: user_profile has invalid type: {value_type}, expected UserProfileSchema"
         )
+    if not state.get("why_this_agent_can_help"):
+        missing_or_invalid.append(
+            "Tools advisor node: why_this_agent_can_help is missing"
+        )
+
+    if missing_or_invalid:
+        issues = ", ".join(missing_or_invalid)
+        print(f"tools_advisor_node input issues: {issues}")
+        raise ValueError(f"Missing/invalid fields: {issues}")
     task = state.get("user_request").task
     user_profile = state.get("user_profile")
     why_this_agent_can_help = state.get("why_this_agent_can_help")
@@ -71,17 +80,27 @@ async def tools_advisor_node(
 
 async def react_node(state: ReActSubgraphState) -> Command[Literal[END]]:
     """ReAct node."""
-    pprint(state)
-    if (
-        not state.get("user_request")
-        or not state.get("user_profile")
-        or not state.get("why_this_agent_can_help")
-        or not state.get("suggested_tools")
-        or not state.get("tools_advisor_reasoning")
-    ):
-        raise ValueError(
-            "User request, user profile, why this agent can help, suggested tools, and tools advisor reasoning are required"
+    missing_or_invalid: list[str] = []
+    if not state.get("user_request"):
+        missing_or_invalid.append("ReAct node: user_request is missing")
+    if not state.get("user_profile"):
+        missing_or_invalid.append("ReAct node: user_profile is missing")
+    elif not isinstance(state.get("user_profile"), UserProfileSchema):
+        value_type = type(state.get("user_profile")).__name__
+        missing_or_invalid.append(
+            f"ReAct node: user_profile has invalid type: {value_type}, expected UserProfileSchema"
         )
+    if not state.get("why_this_agent_can_help"):
+        missing_or_invalid.append("ReAct node: why_this_agent_can_help is missing")
+    if not state.get("suggested_tools"):
+        missing_or_invalid.append("ReAct node: suggested_tools is missing")
+    if not state.get("tools_advisor_reasoning"):
+        missing_or_invalid.append("ReAct node: tools_advisor_reasoning is missing")
+
+    if missing_or_invalid:
+        issues = ", ".join(missing_or_invalid)
+        print(f"react_node input issues: {issues}")
+        raise ValueError(f"Missing/invalid fields: {issues}")
     task = state.get("user_request").task
     user_profile = state.get("user_profile")
     why_this_agent_can_help = state.get("why_this_agent_can_help")
@@ -98,7 +117,11 @@ async def react_node(state: ReActSubgraphState) -> Command[Literal[END]]:
     {"\n".join([f"Name: {tool.name}, Description: {tool.description}" for tool in tool_list])}
 
     """
-    react_response = await react_chain.ainvoke({"messages": [react_input]})
+    # Add recursion_limit to prevent GraphRecursionError
+    react_response = await react_chain.ainvoke(
+        {"messages": [react_input]}, 
+        config={"recursion_limit": 50}
+    )
     return Command(
         goto=END,
         update={

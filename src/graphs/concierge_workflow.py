@@ -59,6 +59,8 @@ async def receptor_router(
     )
 
     # Extract fields from the response, which may be partial if interrupted
+    pprint(f"receptor_router response: {response}")
+
     user_profile = response.get("user_profile")
     user_request = response.get("user_request")
     selected_agent = response.get("selected_agent")
@@ -105,13 +107,21 @@ async def react(state: ConciergeGraphState) -> Command[Literal[END]]:
     else:
         config = {"configurable": {"thread_id": "react_default"}}
 
+    # Import the schema needed for the user_request
+    from src.graphs.receptionist_subgraph.schemas import UserRequestExtractionSchema
+
+    # Create a UserRequestExtractionSchema object from the task string
+    user_request = UserRequestExtractionSchema(task=state.get("task") or "")
+
     _input = {
-        "task": state.get("task"),
+        "user_request": user_request,
         "user_profile": state.get("user_profile"),
         "why_this_agent_can_help": state.get("rationale_of_the_handoff"),
     }
 
     response = await react_subgraph.ainvoke(_input, config)
+
+    pprint(f"react response: {response}")
 
     return Command(
         goto=END,
@@ -154,7 +164,7 @@ if __name__ == "__main__":
                 test_input,
                 config,
                 stream_mode="updates",
-                debug=False,  # Turn off debug for cleaner output
+                debug=True,
             ):
                 pprint(update)
 
@@ -175,7 +185,7 @@ if __name__ == "__main__":
             messages.append("Hi, I'm Jane Doe.")
             test_input = {"messages": messages.copy()}
 
-            result = await concierge_graph.ainvoke(test_input, config)
+            result = await concierge_graph.ainvoke(test_input, config, debug=True)
             if result.get("direct_response_to_the_user"):
                 print(
                     f"   Receptionist asks: {result['direct_response_to_the_user'][:150]}..."
@@ -189,7 +199,7 @@ if __name__ == "__main__":
             )
             test_input2 = {"messages": messages.copy()}
 
-            result2 = await concierge_graph.ainvoke(test_input2, config)
+            result2 = await concierge_graph.ainvoke(test_input2, config, debug=True)
             if result2.get("direct_response_to_the_user"):
                 print(
                     f"   Receptionist asks: {result2['direct_response_to_the_user'][:150]}..."
@@ -202,7 +212,7 @@ if __name__ == "__main__":
             )
             test_input3 = {"messages": messages.copy()}
 
-            result3 = await concierge_graph.ainvoke(test_input3, config)
+            result3 = await concierge_graph.ainvoke(test_input3, config, debug=True)
             if result3.get("direct_response_to_the_user"):
                 print(
                     f"   Receptionist asks: {result3['direct_response_to_the_user'][:150]}..."
@@ -219,10 +229,10 @@ if __name__ == "__main__":
             # Invoke; react subgraph may raise due to input mismatch. If it does,
             # we fall back to checking the saved state.
             result4 = None
-            try:
-                result4 = await concierge_graph.ainvoke(test_input4, config)
-            except Exception as e:
-                print(f"   ⚠️ React subgraph raised: {str(e)[:120]}...")
+            # try:
+            result4 = await concierge_graph.ainvoke(test_input4, config, debug=True)
+            # except Exception as e:
+            #     print(f" ⚠️⚠️⚠️ React subgraph raised: {str(e)[:120]}...")
 
             # Use result if available; otherwise, read from state
             final_state = await concierge_graph.aget_state(config)
@@ -394,7 +404,7 @@ if __name__ == "__main__":
                 print("\nStep 1: Introducing user...")
                 messages.append(f"Hi, I'm {scenario['profile']['name']}.")
                 result = await concierge_graph.ainvoke(
-                    {"messages": messages.copy()}, config
+                    {"messages": messages.copy()}, config, debug=True
                 )
 
                 # Verify receptionist asks for more info
@@ -410,7 +420,7 @@ if __name__ == "__main__":
                     f"I'm currently {scenario['profile']['employment']}."
                 )
                 result = await concierge_graph.ainvoke(
-                    {"messages": messages.copy()}, config
+                    {"messages": messages.copy()}, config, debug=True
                 )
 
                 if result.get("direct_response_to_the_user"):
@@ -423,7 +433,7 @@ if __name__ == "__main__":
                     f"in {scenario['profile']['location']}."
                 )
                 result = await concierge_graph.ainvoke(
-                    {"messages": messages.copy()}, config
+                    {"messages": messages.copy()}, config, debug=True
                 )
 
                 if result.get("direct_response_to_the_user"):
@@ -435,7 +445,7 @@ if __name__ == "__main__":
                     f"I'm looking for {scenario['profile']['preferences']}."
                 )
                 result = await concierge_graph.ainvoke(
-                    {"messages": messages.copy()}, config
+                    {"messages": messages.copy()}, config, debug=True
                 )
 
                 # Profile should be complete now
@@ -450,7 +460,7 @@ if __name__ == "__main__":
 
                     start_time = time.time()
                     result = await concierge_graph.ainvoke(
-                        {"messages": messages.copy()}, config
+                        {"messages": messages.copy()}, config, debug=True
                     )
                     elapsed_time = time.time() - start_time
                     response_times.append(elapsed_time)
@@ -594,7 +604,9 @@ if __name__ == "__main__":
 
         # Initial message
         test_input = {"messages": ["Hi, I'm John Smith."]}
-        result = await graph_with_in_memory_checkpointer.ainvoke(test_input, config)
+        result = await graph_with_in_memory_checkpointer.ainvoke(
+            test_input, config, debug=True
+        )
 
         assert result.get("direct_response_to_the_user"), (
             "Should get receptionist response"
@@ -611,7 +623,9 @@ if __name__ == "__main__":
                 "I live at 789 Tech Ave, San Jose, CA. I'm unemployed.",
             ]
         }
-        result2 = await graph_with_in_memory_checkpointer.ainvoke(test_input2, config)
+        result2 = await graph_with_in_memory_checkpointer.ainvoke(
+            test_input2, config, debug=True
+        )
 
         # Check state is maintained
         state = await graph_with_in_memory_checkpointer.aget_state(config)
@@ -634,7 +648,7 @@ if __name__ == "__main__":
         result3 = None
         try:
             result3 = await graph_with_in_memory_checkpointer.ainvoke(
-                test_input3, config
+                test_input3, config, debug=True
             )
         except Exception as e:
             print(f"⚠️ React subgraph raised: {str(e)[:120]}...")
@@ -681,12 +695,12 @@ if __name__ == "__main__":
 
         # Thread 1
         await graph_with_in_memory_checkpointer.ainvoke(
-            {"messages": ["I'm Alice."]}, config1
+            {"messages": ["I'm Alice."]}, config1, debug=True
         )
 
         # Thread 2
         await graph_with_in_memory_checkpointer.ainvoke(
-            {"messages": ["I'm Bob."]}, config2
+            {"messages": ["I'm Bob."]}, config2, debug=True
         )
 
         # Check isolation
@@ -720,7 +734,7 @@ if __name__ == "__main__":
 
         updates_count = 0
         async for update in graph_with_in_memory_checkpointer.astream(
-            stream_input, stream_config, stream_mode="updates"
+            stream_input, stream_config, stream_mode="updates", debug=True
         ):
             updates_count += 1
             if "receptor_router" in update:
@@ -747,7 +761,7 @@ if __name__ == "__main__":
         # Start with incomplete info
         messages = ["Hi, I'm Sarah Connor."]
         result = await graph_with_in_memory_checkpointer.ainvoke(
-            {"messages": messages}, config
+            {"messages": messages}, config, debug=True
         )
 
         # Should get interrupt asking for more info
@@ -757,7 +771,7 @@ if __name__ == "__main__":
         # Add more info incrementally
         messages.append("I live at 999 Future Blvd, Los Angeles, CA. I'm unemployed.")
         result = await graph_with_in_memory_checkpointer.ainvoke(
-            {"messages": messages}, config
+            {"messages": messages}, config, debug=True
         )
 
         assert result.get("direct_response_to_the_user"), "Should ask for job info"
@@ -771,7 +785,7 @@ if __name__ == "__main__":
             ]
         )
         result = await graph_with_in_memory_checkpointer.ainvoke(
-            {"messages": messages}, config
+            {"messages": messages}, config, debug=True
         )
 
         # Now make a job request
@@ -779,7 +793,7 @@ if __name__ == "__main__":
         result = None
         try:
             result = await graph_with_in_memory_checkpointer.ainvoke(
-                {"messages": messages}, config
+                {"messages": messages}, config, debug=True
             )
         except Exception as e:
             print(f"⚠️ React subgraph raised: {str(e)[:120]}...")
@@ -835,7 +849,7 @@ if __name__ == "__main__":
         try:
             # This should handle gracefully
             result = await graph_with_in_memory_checkpointer.ainvoke(
-                {"messages": [""]}, error_config
+                {"messages": [""]}, error_config, debug=True
             )
             print("✓ Handled empty message gracefully")
         except Exception as e:
@@ -858,7 +872,7 @@ if __name__ == "__main__":
 
         start_time = time.time()
         result = await graph_with_in_memory_checkpointer.ainvoke(
-            {"messages": messages}, perf_config
+            {"messages": messages}, perf_config, debug=True
         )
         elapsed = time.time() - start_time
 
