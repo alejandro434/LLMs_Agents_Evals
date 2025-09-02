@@ -119,8 +119,7 @@ async def react_node(state: ReActSubgraphState) -> Command[Literal[END]]:
     """
     # Add recursion_limit to prevent GraphRecursionError
     react_response = await react_chain.ainvoke(
-        {"messages": [react_input]}, 
-        config={"recursion_limit": 50}
+        {"messages": [react_input]}, config={"recursion_limit": 50}
     )
     return Command(
         goto=END,
