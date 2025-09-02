@@ -1,544 +1,456 @@
-Receptionist_user_conversations:
+#%%
+# conversation_history: list of messages between the human and the ai, this simulates a
+# conversation history. The last message should always be an Human message.
+# last_input_from_human_user: the last input from the human user, this is the last message from the human user in the conversation history.
+# response_from_ia_to_the_last_input_from_user: the response from the AI to the last input
+# from the human user.
+# current_collected_user_info: the specific fields (name, zip_code, current_employment_status,
+# what_is_the_user_looking_for) that the AI has collected from the entire conversation up to
+# this point.
+# any_missing_info_before_handoff: The concierge is required to collect: name, zip_code, current_employment_status, what_is_the_user_looking_for, if any is missing, this will be true, otherwise it will be false.
+# direct_response_to_the_user: the response from the AI to the last input from the human user.
+# next_agent: the next agent to handoff to, this is the next agent to handoff to after the concierge has collected the required information. It can be: "Educator", "Events", "CareerCoach", "Jobs" or "Entrepreneur".
+# task_to_handoff_to_the_next_agent: Well defined instructions for the next agent to handoff to in order to respond to the user's request.
+
+Concierge_examples:
       - Conversation_history:
               - human: "hey just graduated and need to find work asap"
               - ai: "Congrats on graduating! I'd love to help you find work. What's your name?"
               - human: "oh sorry, I'm Emily Clark"
               - ai: "Nice to meet you Emily! Where are you located? That'll help me find jobs near you."
               - human: "I'm in Seattle, 221 Pine St area"
-              - ai: "Great, Seattle has lots of opportunities! Since you just graduated, I'm guessing you're currently unemployed?"
-              - human: "yeah exactly, need something soon"
+              - ai: "Do you know your zip code? It helps me pinpoint nearby roles."
+              - human: "98101"
+              - ai: "Great, Seattle has lots of opportunities! What's your current employment status—working, between jobs, or student?"
+              - human: "Between jobs — just graduated and need something soon"
               - ai: "I understand the urgency. What was your most recent work experience? Even internships or part-time jobs count!"
               - human: "I worked as a barista at Starbucks while in school"
               - ai: "Perfect, that customer service experience is valuable! Was that also in Seattle?"
               - human: "yep same city"
               - ai: "Excellent. What kind of work are you looking for now? Any preferences on schedule or type of role?"
-              - human: "honestly anything entry-level, retail would be fine, part-time is ok"
-        last_input_from_user: "can you help me find places hiring?"
+              - human: "I'm pretty flexible, maybe something in retail or food service since I have experience, part-time would be good to start"
+              - ai: "That makes sense with your background! Would you like me to connect you with our Jobs specialist to find retail and food service opportunities in your area?"
+              - human: "yes please, can you help me find places hiring?"
+        last_input_from_human_user: "yes please, can you help me find places hiring?"
         response_from_ia_to_the_last_input_from_user:
               current_collected_user_info: >
                     name: Emily Clark
-                    current_address: Seattle, 221 Pine St area
-                    employment_status: unemployed
-                    last_job: barista
-                    last_job_location: Seattle
-                    last_job_company: Starbucks
-                    job_preferences: entry-level retail, part-time
+                    current_employment_status: between jobs (recent graduate)
+                    zip_code: 98101
+                    what_is_the_user_looking_for: part-time retail or food service jobs
+              any_missing_info_before_handoff: false
               direct_response_to_the_user: >
-                    Based on your barista experience in Seattle and interest in part-time
-                    retail near 221 Pine St, good first options are Target, Old Navy, and
-                    supermarkets like PCC and Safeway. I can tailor a resume highlighting
-                    cash handling, customer service, and weekend availability. Would you
-                    like me to prioritize Target and Safeway, or add a pharmacy like
-                    Walgreens?
+                    Absolutely! I have all your information and I'm connecting you with our
+                    Jobs specialist now. They'll help you find part-time retail and food
+                    service positions in the 98101 area that match your barista experience.
+                    They can also help with resume tailoring and application strategies.
+                    One moment while I transfer you.
+              next_agent: "Jobs"
+              task_to_handoff_to_the_next_agent: >
+                    Help Emily Clark find part-time retail or food service jobs in Seattle
+                    98101 area. She has barista experience at Starbucks and just graduated.
+
+      - Conversation_history:
+              - human: "I want to learn data analytics and don't know where to start"
+              - ai: "Great goal! I can help you find quality learning paths. What's your name?"
+              - human: "Angela Kim"
+              - ai: "Nice to meet you, Angela! Where are you located? A zip code helps me find nearby options."
+              - human: "Los Angeles, 90028"
+              - ai: "Thanks! What's your current employment status—working, between jobs, or student?"
+              - human: "Working full-time at a bank"
+              - ai: "Got it. Are you looking for courses, bootcamps, or a certificate program in data analytics?"
+              - human: "Courses or a bootcamp—ideally part-time or flexible"
+              - ai: "Perfect. I can connect you with our Educator specialist to map this out."
+              - human: "yes please, connect me"
+        last_input_from_human_user: "yes please, connect me"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Angela Kim
+                    zip_code: 90028
+                    current_employment_status: employed full-time
+                    what_is_the_user_looking_for: part-time or flexible data analytics courses/bootcamps
+              any_missing_info_before_handoff: false
+              direct_response_to_the_user: >
+                    Excellent choice, Angela. I'm connecting you with our Educator specialist
+                    who will recommend part-time and flexible data analytics programs near
+                    90028 and online options that fit a full-time schedule. They'll help you
+                    compare curricula, timelines, and costs. One moment while I transfer you.
+              next_agent: "Educator"
+              task_to_handoff_to_the_next_agent: >
+                    Help Angela Kim (90028, employed full-time) find part-time or flexible
+                    data analytics courses or bootcamps. Provide options with curriculum and
+                    schedule fit.
+
+      - Conversation_history:
+              - human: "are there any AI meetups happening this month?"
+              - ai: "I'd love to help! What's your name so I can personalize the search?"
+              - human: "Lisa Chang"
+              - ai: "Hi Lisa! What city and zip code are you in?"
+              - human: "San Jose, 95113"
+              - ai: "Great! What's your current employment status?"
+              - human: "Working in IT"
+              - ai: "Thanks! Are you interested in AI/ML talks, hands-on workshops, or networking?"
+              - human: "Talks and networking, mostly"
+              - ai: "Perfect. I can connect you with our Events specialist for curated picks."
+              - human: "please do"
+        last_input_from_human_user: "please do"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Lisa Chang
+                    zip_code: 95113
+                    current_employment_status: employed full-time (IT)
+                    what_is_the_user_looking_for: AI/ML talks and networking events this month
+              any_missing_info_before_handoff: false
+              direct_response_to_the_user: >
+                    Got it, Lisa. I'm connecting you with our Events specialist now. They'll
+                    share AI/ML talks and networking events in San Jose (95113) this month,
+                    plus RSVP links and reminders. Transferring you now.
+              next_agent: "Events"
+              task_to_handoff_to_the_next_agent: >
+                    Share AI/ML talks and networking events in San Jose 95113 this month for
+                    Lisa Chang (employed in IT). Include RSVP links and brief summaries.
+
+      - Conversation_history:
+              - human: "I feel stuck in my job and not sure what to do next"
+              - ai: "I'm here to help. What's your name so I can better support you?"
+              - human: "James Parker"
+              - ai: "Thanks, James. What's your current employment status?"
+              - human: "Employed, but unhappy—doing the same admin tasks for years"
+              - ai: "I understand. Where are you located? A zip code helps me tailor resources."
+              - human: "I'm in Chicago"
+              - ai: "Thanks for sharing. Are there particular fields you're curious about?"
+              - human: "Maybe project management, but I'm not sure"
+              - ai: "We can explore that. To connect you with the right coach, I need your zip code."
+              - human: "I'll have to look it up"
+        last_input_from_human_user: "I'll have to look it up"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: James Parker
+                    zip_code: null
+                    current_employment_status: employed (admin role), feeling stuck
+                    what_is_the_user_looking_for: career coaching; exploring move toward project management
+              any_missing_info_before_handoff: true
+              direct_response_to_the_user: >
+                    No problem, James. When you have your zip code, share it here and I'll
+                    connect you with our Career Coach who specializes in transitions from
+                    admin to project management. They can assess your transferable skills
+                    and map a practical action plan. What's your zip code?
               next_agent: null
               task_to_handoff_to_the_next_agent: null
 
-      # Example showing complete profile collection then null response
       - Conversation_history:
-              - human: "hi need a job"
-              - ai: "I'm here to help! What's your name?"
-              - human: "Sam"
-              - ai: "Thanks Sam! Where are you located?"
-              - human: "NYC"
-              - ai: "Great! Are you currently employed or looking for work?"
-              - human: "unemployed"
-              - ai: "Got it. What was your last job?"
-              - human: "data analyst at a bank"
-              - ai: "Which bank and where was it located?"
-              - human: "Chase in NYC"
-              - ai: "Perfect! What kind of roles are you looking for?"
-              - human: "data science or analyst roles, remote preferred"
-        last_input_from_user: "find me data jobs"
+              - human: "I need a new job quickly"
+              - ai: "I can help. What's your name?"
+              - human: "Marcus Thompson"
+              - ai: "Nice to meet you, Marcus. Where are you located? A zip code helps me narrow jobs."
+              - human: "Denver, 80202"
+              - ai: "Thanks. What's your current employment status—working, between jobs, or student?"
+              - human: "Between jobs"
+              - ai: "Understood. What kind of roles are you targeting so I can route you correctly?"
+              - human: "Not sure, I just need something soon"
+              - ai: "Got it. I can help once I know your role preferences or strengths."
+              - human: "okay, what do you recommend?"
+        last_input_from_human_user: "okay, what do you recommend?"
         response_from_ia_to_the_last_input_from_user:
               current_collected_user_info: >
-                    name: Sam
-                    current_address: NYC
-                    employment_status: unemployed
-                    last_job: data analyst
-                    last_job_location: Chase
-                    last_job_company: Chase
-                    job_preferences: data science or analyst roles, remote preferred
+                    name: Marcus Thompson
+                    zip_code: 80202
+                    current_employment_status: between jobs
+                    what_is_the_user_looking_for: null
+              any_missing_info_before_handoff: true
               direct_response_to_the_user: >
-                    Based on your data analyst experience in Chase and interest in remote
-                    data science or analyst roles, good first options are Google, Amazon, and
-                    Meta. I can tailor a resume highlighting data analysis, SQL, and machine
-                    learning. Would you like me to prioritize Google and Amazon, or add Meta?
-              next_agent: "resume_builder"
-              task_to_handoff_to_the_next_agent: "build a resume for the user"
-
-      # Example with user providing info naturally
-      - Conversation_history:
-              - human: "just graduated, need work"
-              - ai: "Congrats on graduating! I'll help you find work. What's your name?"
-              - human: "Jake Thompson"
-              - ai: "Thanks Jake! Where are you located?"
-              - human: "Baltimore, 789 College Ave"
-              - ai: "Great! Since you just graduated, are you currently unemployed?"
-              - human: "yeah, just finished school"
-              - ai: "Got it. Did you have any internships or part-time work recently?"
-              - human: "did an internship at TechStartup here in Baltimore"
-              - ai: "Excellent experience! What kind of roles are you looking for?"
-              - human: "entry level tech stuff, pretty flexible"
-        input: "can you find tech job fairs?"
-        output:
-              direct_response_to_the_user: null # Has all info: name, location, unemployed, intern at TechStartup/Baltimore, wants entry-level tech
-
-      # Example recognizing preferences in requests
-      - Conversation_history:
-              - human: "laid off, need new job"
-              - ai: "Sorry to hear that. Let me help! What's your name?"
-              - human: "Robert Chen"
-              - ai: "Thanks Robert. Where are you located?"
-              - human: "Norfolk VA"
-              - ai: "Got it. What was your last position?"
-              - human: "Senior Engineer at DefenseContractor in Norfolk"
-              - ai: "Great experience! What type of roles interest you?"
-              - human: "senior engineering, defense or aerospace preferred"
-        input: "find defense contractors hiring"
-        output:
-              direct_response_to_the_user: null # Complete: name, location, unemployed (laid off), job/company/location, preferences
-
-      # Career changer example - recognizing preferences immediately
-      - Conversation_history:
-              - human: "thinking about switching careers"
-              - ai: "Exciting! Let me help. What's your name?"
-              - human: "Maria Santos"
-              - ai: "Thanks Maria! Where are you located?"
-              - human: "Richmond, Virginia"
-              - ai: "Great! Are you currently employed?"
-              - human: "yes, still working but want to change"
-              - ai: "What's your current role and company?"
-              - human: "Sales Manager at RetailChain here in Richmond"
-              - ai: "Good experience! What kind of roles interest you?"
-              - human: "project management or operations roles, hybrid would be nice"
-        input: "what PM jobs don't require tons of experience?"
-        output:
-              direct_response_to_the_user: null # Has all fields! Name, location, employed, Sales Manager/RetailChain/Richmond, wants PM/ops hybrid
-
-      # Example showing how to extract info from partial statements
-      - Conversation_history:
-              - human: "need help finding work"
-              - ai: "I'll help you find work! What's your name?"
-              - human: "Robert Chen"
-              - ai: "Thanks Robert! Where are you located?"
-              - human: "Norfolk VA"
-              - ai: "Got it. Are you currently employed?"
-              - human: "unemployed, got laid off"
-              - ai: "Sorry to hear that. What was your last position?"
-              - human: "I was a Senior Engineer at DefenseContractor in Norfolk"
-        input: "looking for senior engineering roles, defense or aerospace"
-        output:
-              direct_response_to_the_user: null # Complete! Has name, location, unemployed, Senior Engineer/DefenseContractor/Norfolk, wants senior eng defense/aerospace
-
-      # Example with info provided naturally in conversation
-      - Conversation_history:
-              - human: "hi looking for work"
-              - ai: "I'd love to help! What's your name?"
-              - human: "Maria"
-              - ai: "Thanks Maria! Where are you located?"
-              - human: "456 Main Street in Richmond, Virginia"
-              - ai: "Great! Are you currently working?"
-              - human: "yeah still working but looking to make a change"
-              - ai: "What's your current job?"
-              - human: "currently I'm a Sales Manager at RetailChain here in Richmond"
-        input: "interested in maybe project management or operations roles"
-        output:
-              direct_response_to_the_user: null # All info present: Maria, Richmond VA, employed, Sales Manager at RetailChain in Richmond, wants PM/ops
+                    To match you with the right jobs, could you share a couple of roles or
+                    areas you're open to (e.g., retail, warehouse, customer service,
+                    hospitality)? If you prefer, tell me recent experience or strengths and
+                    I'll suggest options. Once I have that, I'll connect you with our Jobs
+                    specialist.
+              next_agent: null
+              task_to_handoff_to_the_next_agent: null
 
       - Conversation_history:
-              - human: "looking for remote software engineering work"
-              - ai: "I can definitely help with that! Let me get some info to find the best matches. What's your name?"
-              - human: "Alex Rivera"
-              - ai: "Thanks Alex! Where are you currently based? This helps even for remote roles."
-              - human: "San Francisco, 1234 Park Ave area"
-              - ai: "Perfect location for tech! Are you currently employed or actively job searching?"
-              - human: "employed but exploring what's out there"
-              - ai: "Smart to explore options! What's your current role and company?"
-              - human: "Senior Software Engineer at Atlassian"
-              - ai: "Excellent company! Is that also in San Francisco?"
-              - human: "yes, their SF office"
-              - ai: "Great experience! What kind of remote roles interest you? Any specific tech stack or requirements?"
-              - human: "backend stuff mainly, Python and Go, hoping for 150k+ and fully remote"
-        input: "what companies should I look at?"
-        output:
+              - human: "I want to start an online business selling custom candles"
+              - ai: "That's exciting! What's your name?"
+              - human: "Maria Gonzalez"
+              - ai: "Nice to meet you, Maria. Where are you located? A zip code helps with local resources."
+              - human: "Phoenix, 85004"
+              - ai: "Thanks! What's your current employment status?"
+              - human: "Part-time retail"
+              - ai: "Great. Are you looking for guidance on setup, pricing, marketing, or all of the above?"
+              - human: "All of the above—I'm starting from scratch"
+              - ai: "Perfect. I can connect you with our Entrepreneur specialist for a full plan."
+              - human: "please connect me"
+        last_input_from_human_user: "please connect me"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Maria Gonzalez
+                    zip_code: 85004
+                    current_employment_status: employed part-time (retail)
+                    what_is_the_user_looking_for: help launching an online custom candles business (setup, pricing, marketing)
+              any_missing_info_before_handoff: false
               direct_response_to_the_user: >
-                    Given your senior backend experience in Python and Go with a remote US
-                    preference, target Stripe, Datadog, Notion, Snowflake, and OpenAI. I can
-                    craft bullets on distributed systems and production services at Atlassian.
-                    Should I begin with Stripe and Datadog, or add Snowflake platform teams?
+                    Awesome, Maria. I'm connecting you with our Entrepreneur specialist who
+                    will help you choose an e-commerce platform, handle registration and
+                    taxes, set pricing, and plan your marketing. They'll also share local
+                    Phoenix resources for makers. Transferring you now.
+              next_agent: "Entrepreneur"
+              task_to_handoff_to_the_next_agent: >
+                    Help Maria Gonzalez (85004, part-time retail) launch an online custom
+                    candles business. Cover platform selection, business setup, pricing, and
+                    marketing.
 
       - Conversation_history:
-              - human: "need help finding tech jobs, just got laid off"
-              - ai: "I'm sorry to hear about the layoff, but I'm here to help you bounce back! What's your name?"
-              - human: "Anna Patel"
-              - ai: "Hi Anna, let's find you something great. Where are you located?"
-              - human: "Chicago, near 3400 N Clark St"
-              - ai: "Chicago has a strong tech scene! What was your most recent position?"
-              - human: "Software Developer at a startup called TechFlow"
-              - ai: "Good experience! Was TechFlow also in Chicago?"
-              - human: "yeah, downtown Chicago"
-              - ai: "Perfect. What type of tech roles are you targeting? Any preferences on company size, remote options, or tech stack?"
-              - human: "looking for full-stack or backend roles, prefer remote or hybrid, using Node.js or Python"
-        input: "can you find companies hiring right now?"
-        output:
+              - human: "I want to switch into UX design. Where should I start?"
+              - ai: "Great goal! What's your name so I can tailor recommendations?"
+              - human: "Noah Patel"
+              - ai: "Thanks, Noah. What's your zip code? That helps me find local options."
+              - human: "30309"
+              - ai: "Got it. What's your current employment status—working, between jobs, or student?"
+              - human: "I'll share that in a bit"
+        last_input_from_human_user: "I'll share that in a bit"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Noah Patel
+                    zip_code: 30309
+                    current_employment_status: null
+                    what_is_the_user_looking_for: UX design learning path
+              any_missing_info_before_handoff: true
               direct_response_to_the_user: >
-                    For day-shift med-surg/telemetry in Chicago, check Northwestern Medicine,
-                    Rush, and Advocate Aurora. I can tune your resume around telemetry
-                    monitoring, EMR proficiency, and patient ratios. Should I prioritize
-                    Northwestern first and set alerts for Rush and Advocate?
+                    No problem, Noah. To tailor recommendations and schedules, are you
+                    working, between jobs, or a student? Once I have that, I'll connect you
+                    with our Educator specialist for UX design options that fit your
+                    situation.
+              next_agent: null
+              task_to_handoff_to_the_next_agent: null
 
       - Conversation_history:
-              - human: "Looking for full-time warehouse work."
-              - ai: "Name and current address?"
-              - human: "Jose Martinez, 512 W Roosevelt St, Phoenix, AZ."
-              - ai: "Employment status?"
-              - human: "Employed part-time."
-              - ai: "Last job, company, and location?"
-              - human: "Forklift operator at Amazon in Phoenix."
-              - ai: "Preferences (shift, pay, commute)?"
-              - human: "Full-time nights, within 30 minutes."
-        input: "Where should I apply?"
-        output:
+              - human: "Any blockchain meetups happening soon?"
+              - ai: "Happy to check. What's your name?"
+              - human: "Priya Singh"
+              - ai: "Hi Priya! What city and zip code are you in?"
+              - human: "I'm in Austin downtown"
+              - ai: "Could you share your zip code to narrow the search to nearby events?"
+              - human: "not sure"
+        last_input_from_human_user: "not sure"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Priya Singh
+                    zip_code: null
+                    current_employment_status: null
+                    what_is_the_user_looking_for: blockchain meetups happening soon
+              any_missing_info_before_handoff: true
               direct_response_to_the_user: >
-                    With recent forklift experience in Phoenix and a night-shift preference,
-                    apply to Amazon Sort Centers, FedEx Ground, UPS, and 3PLs like XPO. I can
-                    highlight OSHA safety, palletization, and PIT certification on your
-                    resume. Shall I start with Amazon and FedEx Ground?
+                    No worries, Priya. Please share your zip code so I can pull blockchain
+                    meetups near you. Once I have it, I'll connect you with our Events
+                    specialist for curated picks and RSVP links.
+              next_agent: null
+              task_to_handoff_to_the_next_agent: null
 
       - Conversation_history:
-              - human: "I'm a teacher looking for a new role."
-              - ai: "Name and current address?"
-              - human: "Maria Gomez, 801 Biscayne Blvd, Miami, FL."
-              - ai: "Employment status?"
-              - human: "Self-employed tutor."
-              - ai: "Last job, company, and location?"
-              - human: "Middle school math teacher at Miami-Dade County Public Schools."
-              - ai: "Preferences (school type, pay, grades)?"
-              - human: "Charter schools, 6–8th grade, $60k+."
-        input: "Any schools you'd suggest I target?"
-        output:
+              - human: "I'm moving from graphic design to UX and need a plan."
+              - ai: "I can help map that out. What's your name?"
+              - human: "Derek Liu"
+              - ai: "Thanks, Derek. What's your zip code?"
+              - human: "94110"
+              - ai: "Great. What's your current employment status?"
+              - human: "Employed full-time as a graphic designer"
+              - ai: "Are you seeking coaching on portfolio, resume, and interview prep?"
+              - human: "Yes, exactly. I'd like a step-by-step plan"
+        last_input_from_human_user: "Yes, exactly. I'd like a step-by-step plan"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Derek Liu
+                    zip_code: 94110
+                    current_employment_status: employed full-time (graphic designer)
+                    what_is_the_user_looking_for: coaching to transition to UX (portfolio, resume, interviews)
+              any_missing_info_before_handoff: false
               direct_response_to_the_user: >
-                    Given your math background in Miami and charter preference, consider KIPP
-                    Miami, Somerset Academy, and Mater Academy. I can emphasize outcomes (test
-                    score gains) and classroom management. Should I prepare versions of your
-                    resume for KIPP and Somerset first?
+                    Perfect, Derek. I'm connecting you with our Career Coach who will help
+                    you plan a transition to UX with a portfolio build, resume targeting, and
+                    interview preparation tailored to your schedule. One moment while I
+                    transfer you.
+              next_agent: "CareerCoach"
+              task_to_handoff_to_the_next_agent: >
+                    Help Derek Liu (94110, employed full-time graphic designer) plan a
+                    transition to UX: portfolio build, resume targeting, interview prep, and
+                    timeline.
 
       - Conversation_history:
-              - human: "I'm a graphic designer seeking remote roles."
-              - ai: "Name and current address?"
-              - human: "Liam O'Connor, 900 Congress Ave, Austin, TX."
-              - ai: "Employment status?"
-              - human: "Unemployed."
-              - ai: "Last job, company, and location?"
-              - human: "Junior Designer at Canva in Sydney."
-              - ai: "Preferences (industry, tools, schedule)?"
-              - human: "Brand design, Figma/Adobe, fully remote."
-        input: "Where should I apply first?"
-        output:
+              - human: "I want to start a food truck in Austin 78704"
+              - ai: "That sounds exciting! What's your name so I can personalize support?"
+              - human: "I'll share later"
+        last_input_from_human_user: "I'll share later"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: null
+                    zip_code: 78704
+                    current_employment_status: null
+                    what_is_the_user_looking_for: help launching a food truck business in Austin
+              any_missing_info_before_handoff: true
               direct_response_to_the_user: >
-                    For remote brand design, target Figma, Zapier, Shopify, and GitLab. I can
-                    showcase your Canva projects, component libraries, and accessibility work.
-                    Want me to draft a portfolio email for Figma and Shopify?
+                    Absolutely—could you share your name? Once I have it, I'll connect you
+                    with our Entrepreneur specialist who can outline permits, budget, and a
+                    step-by-step launch plan for a food truck in 78704.
+              next_agent: null
+              task_to_handoff_to_the_next_agent: null
 
       - Conversation_history:
-              - human: "I'm retired and want part-time consulting."
-              - ai: "Name and current address?"
-              - human: "John Lee, 1200 5th Ave, Seattle, WA."
-              - ai: "Employment status?"
-              - human: "Retired."
-              - ai: "Last job, company, and location?"
-              - human: "Project Manager at Boeing in Seattle."
-              - ai: "Preferences (hours, domain, hybrid/remote)?"
-              - human: "10–15 hrs/week, aerospace ops, hybrid."
-        input: "What opportunities should I consider?"
-        output:
+              - human: "Looking for remote customer support roles"
+              - ai: "I can help. What's your name?"
+              - human: "Sofia Ramirez"
+              - ai: "Nice to meet you, Sofia. What's your zip code?"
+              - human: "60614"
+              - ai: "Thanks. What's your current employment status?"
+              - human: "Working part-time in retail"
+              - ai: "Any schedule preferences or relevant experience?"
+              - human: "Evenings preferred; 2 years phone support in college"
+              - ai: "Want me to connect you with our Jobs specialist now?"
+              - human: "Yes please"
+        last_input_from_human_user: "Yes please"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Sofia Ramirez
+                    zip_code: 60614
+                    current_employment_status: employed part-time (retail)
+                    what_is_the_user_looking_for: remote customer support roles; evenings preferred
+              any_missing_info_before_handoff: false
               direct_response_to_the_user: >
-                    You're a strong fit for fractional PM work with aerospace suppliers, MRO
-                    shops, and consultancies like Alvarez & Marsal. I can position your Boeing
-                    experience toward process improvement and vendor coordination. Should I
-                    start outreach to three Seattle suppliers?
+                    Great, Sofia. I'm connecting you with our Jobs specialist to find remote
+                    customer support roles that fit 60614 and your evening availability. They
+                    can also leverage your two years of phone support experience.
+              next_agent: "Jobs"
+              task_to_handoff_to_the_next_agent: >
+                    Find remote customer support roles for Sofia Ramirez (60614, part-time
+                    retail). Evenings preferred; leverage 2 years phone support experience.
 
       - Conversation_history:
-              - human: "Looking for construction carpentry work."
-              - ai: "Name and current address?"
-              - human: "Ahmed Hassan, 1440 Blake St, Denver, CO."
-              - ai: "Employment status?"
-              - human: "Unemployed."
-              - ai: "Last job, company, and location?"
-              - human: "Carpenter at PCL Construction in Denver."
-              - ai: "Preferences (union, travel, pay)?"
-              - human: "Union jobs, local sites, prevailing wage."
-        input: "Any leads you'd recommend?"
-        output:
+              - human: "I need warehouse work ASAP"
+              - ai: "I can help. What's your name?"
+              - human: "Tyler Brooks"
+              - ai: "Thanks, Tyler. What city and zip code are you in?"
+              - human: "Bay Area, near Oakland"
+              - ai: "Could you share your zip code to find nearby roles?"
+              - human: "I don't know it"
+        last_input_from_human_user: "I don't know it"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Tyler Brooks
+                    zip_code: null
+                    current_employment_status: null
+                    what_is_the_user_looking_for: warehouse jobs ASAP near Oakland
+              any_missing_info_before_handoff: true
               direct_response_to_the_user: >
-                    Check union halls (Carpenters Local) and contractors like Mortenson and JE
-                    Dunn in Denver. I can tune your resume for framing, finish carpentry, and
-                    OSHA-10. Want me to pull current bids and apprenticeships to target?
+                    No problem, Tyler. Please share your zip code so I can locate warehouse
+                    roles closest to you. Once I have it, I'll connect you with our Jobs
+                    specialist to start applying right away.
+              next_agent: null
+              task_to_handoff_to_the_next_agent: null
 
       - Conversation_history:
-              - human: "I'm exploring tech sales roles."
-              - ai: "Name and current address?"
-              - human: "Priya Shah, 88 Pine St, New York, NY."
-              - ai: "Employment status?"
-              - human: "Employed."
-              - ai: "Last job, company, and location?"
-              - human: "Sales Associate at Best Buy in Queens."
-              - ai: "Preferences (SaaS/retail, OTE, territory)?"
-              - human: "SaaS SDR, NYC, $90k+ OTE."
-        input: "Which companies are good targets?"
-        output:
+              - human: "I want an AWS Solutions Architect prep course"
+              - ai: "Great! What's your name?"
+              - human: "Hannah Lee"
+              - ai: "Hi Hannah. What's your zip code?"
+              - human: "75001"
+              - ai: "What's your current employment status?"
+              - human: "Working full-time in IT support"
+              - ai: "Do you prefer self-paced or instructor-led?"
+              - human: "Self-paced, evenings"
+              - ai: "Shall I connect you with our Educator specialist?"
+              - human: "Yes"
+        last_input_from_human_user: "Yes"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Hannah Lee
+                    zip_code: 75001
+                    current_employment_status: employed full-time (IT support)
+                    what_is_the_user_looking_for: self-paced AWS Solutions Architect prep, evenings
+              any_missing_info_before_handoff: false
               direct_response_to_the_user: >
-                    For NYC SaaS SDR roles, target HubSpot, Outreach, Datadog, and MongoDB. I
-                    can stress customer discovery from Best Buy and pipeline discipline. Should
-                    I start with HubSpot and Datadog applications?
+                    Excellent. I'm connecting you with our Educator specialist to recommend
+                    self-paced AWS Solutions Architect prep that fits evening study, plus
+                    practice exam resources. One moment while I transfer you.
+              next_agent: "Educator"
+              task_to_handoff_to_the_next_agent: >
+                    Recommend self-paced AWS Solutions Architect prep for Hannah Lee (75001,
+                    full-time IT support), evenings-friendly. Include practice exams and a
+                    realistic study timeline.
 
       - Conversation_history:
-              - human: "I'm seeking a data analyst position."
-              - ai: "Name and current address?"
-              - human: "Chen Wu, 77 Massachusetts Ave, Boston, MA."
-              - ai: "Employment status?"
-              - human: "Unemployed."
-              - ai: "Last job, company, and location?"
-              - human: "Analyst at Fidelity in Boston."
-              - ai: "Preferences (tools, hybrid/remote, industry)?"
-              - human: "SQL/Python/Tableau, hybrid, fintech."
-        input: "Where should I apply?"
-        output:
+              - human: "Are there women's tech networking events next month?"
+              - ai: "I'd love to help. What's your name?"
+              - human: "Aisha Mohammed"
+              - ai: "Thanks, Aisha. What's your zip code?"
+              - human: "10016"
+              - ai: "What's your current employment status?"
+              - human: "Student"
+              - ai: "Any preference for talks, networking, or workshops?"
+              - human: "Networking and mentorship"
+              - ai: "Ready for me to connect you with our Events specialist?"
+              - human: "Yes, please"
+        last_input_from_human_user: "Yes, please"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Aisha Mohammed
+                    zip_code: 10016
+                    current_employment_status: student
+                    what_is_the_user_looking_for: women's tech networking and mentorship events next month
+              any_missing_info_before_handoff: false
               direct_response_to_the_user: >
-                    Apply to Fidelity, State Street, Capital One, and Klarna analytics teams. I
-                    will highlight cohort analysis, SQL performance tuning, and dashboards.
-                    Would you like me to focus on Capital One and Fidelity first?
+                    Great, Aisha. I'm connecting you with our Events specialist who will
+                    curate women's tech networking and mentorship events near 10016 next
+                    month, with RSVP links and reminders. Transferring you now.
+              next_agent: "Events"
+              task_to_handoff_to_the_next_agent: >
+                    Curate women's tech networking events next month near 10016 for Aisha
+                    Mohammed (student). Include RSVP links and brief summaries.
 
       - Conversation_history:
-              - human: "Looking for hospitality front-desk jobs."
-              - ai: "Name and current address?"
-              - human: "Sofia Rossi, 2000 Sunset Blvd, Los Angeles, CA."
-              - ai: "Employment status?"
-              - human: "Unemployed."
-              - ai: "Last job, company, and location?"
-              - human: "Server at Olive Garden in Los Angeles."
-              - ai: "Preferences (shift, hotel size, benefits)?"
-              - human: "Front desk, mid-size hotels, evenings."
-        input: "What should I do next?"
-        output:
+              - human: "I'm burned out and thinking about leaving healthcare"
+              - ai: "I'm here to help. What's your name?"
+              - human: "Olivia Bennett"
+              - ai: "Thanks, Olivia. What's your zip code?"
+              - human: "97214"
+              - ai: "Thanks. What's your current employment status—working, between jobs, or student?"
+              - human: "It's complicated"
+        last_input_from_human_user: "It's complicated"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Olivia Bennett
+                    zip_code: 97214
+                    current_employment_status: null
+                    what_is_the_user_looking_for: career coaching for transition out of healthcare
+              any_missing_info_before_handoff: true
               direct_response_to_the_user: >
-                    Target Hilton Garden Inn, Courtyard Marriott, and boutique hotels in
-                    Hollywood. I'll emphasize customer service, POS, and conflict resolution
-                    from your server role. Shall I start with Hilton Garden Inn and one
-                    boutique property?
+                    Understood, Olivia. To match you with the right coach, could you share if
+                    you're currently working, between jobs, or a student? Once I have that,
+                    I'll connect you with our Career Coach experienced in healthcare career
+                    transitions.
+              next_agent: null
+              task_to_handoff_to_the_next_agent: null
 
       - Conversation_history:
-              - human: "I'm seeking manufacturing assembly work."
-              - ai: "Name and current address?"
-              - human: "Peter Novak, 1500 Michigan Ave, Detroit, MI."
-              - ai: "Employment status?"
-              - human: "Self-employed."
-              - ai: "Last job, company, and location?"
-              - human: "Auto mechanic at Ford in Dearborn."
-              - ai: "Preferences (shift, union, commute)?"
-              - human: "Day shift, union, within 25 minutes."
-        input: "Any recommendations?"
-        output:
+              - human: "I want to open a home bakery—need help with permits and pricing"
+              - ai: "Awesome! What's your name?"
+              - human: "Jacob Rivera"
+              - ai: "What's your zip code?"
+              - human: "33130"
+              - ai: "What's your current employment status?"
+              - human: "Between jobs"
+              - ai: "Would you like me to connect you with our Entrepreneur specialist?"
+              - human: "Yes, thanks"
+        last_input_from_human_user: "Yes, thanks"
+        response_from_ia_to_the_last_input_from_user:
+              current_collected_user_info: >
+                    name: Jacob Rivera
+                    zip_code: 33130
+                    current_employment_status: between jobs
+                    what_is_the_user_looking_for: help launching a home bakery (permits, pricing, marketing basics)
+              any_missing_info_before_handoff: false
               direct_response_to_the_user: >
-                    Apply to Ford, Stellantis, and Magna plants near Dearborn. I can emphasize
-                    torque specs, quality checks, and safety. Want me to queue applications for
-                    Ford and Magna first?
-
-      - Conversation_history:
-              - human: "I'm in Rockville, MD and looking for biotech QA roles."
-              - ai: "What's your name and current address?"
-              - human: "Nina Park, 200 Monroe St, Rockville, MD."
-              - ai: "Employment status?"
-              - human: "Employed on a contract."
-              - ai: "Last job and preferences?"
-              - human: "QA tech at a small lab; full-time, day shift."
-        input: "Which Maryland programs and companies fit biotech/healthcare?"
-        output:
-              direct_response_to_the_user: >
-                    Start with Maryland Workforce Exchange (MWE) for openings and EARN Maryland
-                    for training grants. Consider Johns Hopkins Medicine labs and Baltimore-area
-                    research facilities hiring QA and lab operations roles.
-
-                    Resources (Maryland):
-                    {RESOURCES_IN_MARYLAND}
-
-      - Conversation_history:
-              - human: "I'm in Annapolis, MD seeking hospitality corporate roles."
-              - ai: "Name and current address?"
-              - human: "Elena Ruiz, 99 Main St, Annapolis, MD."
-              - ai: "Employment status and preferences?"
-              - human: "Employed; open to corporate ops, hybrid."
-        input: "Any Maryland initiatives or companies I should focus on?"
-        output:
-              direct_response_to_the_user: >
-                    Use MWE for job search and EARN Maryland for industry-led pathways. Marriott
-                    International (HQ in Bethesda) posts corporate roles across operations, HR, and
-                    finance that align with hospitality experience.
-
-                    Resources (Maryland):
-                    {RESOURCES_IN_MARYLAND}
-
-      - Conversation_history:
-              - human: "From Linthicum, MD—interested in entry-level defense manufacturing."
-              - ai: "What's your name and current address?"
-              - human: "Trevor Bell, 800 Nursery Rd, Linthicum, MD."
-              - ai: "Employment status and shift?"
-              - human: "Unemployed; open to shifts."
-        input: "What Maryland programs and companies fit defense manufacturing?"
-        output:
-              direct_response_to_the_user: >
-                    Check the Apprenticeship and Training Program (MATP) and EARN Maryland for
-                    hands-on pathways. Northrop Grumman (Linthicum) regularly hires for assembly
-                    and manufacturing tech roles.
-
-                    Resources (Maryland):
-                    {RESOURCES_IN_MARYLAND}
-
-      - Conversation_history:
-              - human: "I'm in Arlington, VA exploring cybersecurity and consulting."
-              - ai: "Name and current address?"
-              - human: "James Patel, 1100 Wilson Blvd, Arlington, VA."
-              - ai: "Employment status and interests?"
-              - human: "Employed; moving toward cyber/analytics consulting."
-        input: "Which Virginia programs and employers should I target?"
-        output:
-              direct_response_to_the_user: >
-                    Use Virginia Career Works for coaching and job matching, and FastForward for
-                    short-term security credential courses. Employers near Arlington include Booz
-                    Allen Hamilton for cyber/analytics consulting roles.
-
-                    Resources (Virginia):
-                    {RESOURCES_IN_VIRGINIA}
-
-      - Conversation_history:
-              - human: "Hello from Alexandria, VA—marketing/analytics corporate roles interest me."
-              - ai: "What's your name and current address?"
-              - human: "Rachel Green, 300 King St, Alexandria, VA."
-              - ai: "Employment status and preferences?"
-              - human: "Employed; hybrid preferred."
-        input: "Any Virginia state programs and companies you'd suggest?"
-        output:
-              direct_response_to_the_user: >
-                    Start with Virginia Career Works and consider G3/FastForward if you want a
-                    credential boost. Target Capital One in McLean for product/marketing analytics
-                    and Booz Allen for analytics consulting.
-
-                    Resources (Virginia):
-                    {RESOURCES_IN_VIRGINIA}
-
-      - Conversation_history:
-              - human: "From Norfolk, VA—seeking energy/utilities field roles."
-              - ai: "Name and current address?"
-              - human: "Andre Collins, 500 E Main St, Norfolk, VA."
-              - ai: "Employment status and schedule?"
-              - human: "Unemployed; full-time."
-        input: "Which Virginia programs and employers fit energy/utilities?"
-        output:
-              direct_response_to_the_user: >
-                    Use Virginia Career Works for placement support and FastForward for utility
-                    technician credentials. Dominion Energy is a strong employer statewide; in
-                    Hampton Roads, also keep an eye on roles at HII facilities.
-
-                    Resources (Virginia):
-                    {RESOURCES_IN_VIRGINIA}
-
-      - Conversation_history:
-              - human: "Hi! I'm in Baltimore, MD and looking for job programs."
-              - ai: "Great—what's your name and current address?"
-              - human: "Dana Brooks, 1200 Light St, Baltimore, MD."
-              - ai: "Employment status?"
-              - human: "Unemployed."
-              - ai: "Last job and preferences?"
-              - human: "Retail associate; interested in training and local employers."
-        input: "What Maryland programs or companies should I look at?"
-        output:
-              direct_response_to_the_user: >
-                    For Maryland resources and employers near Baltimore, start with the Maryland
-                    Workforce Exchange (MWE), EARN Maryland training, and the Apprenticeship and
-                    Training Program. Local employers to watch include Under Armour and Johns
-                    Hopkins Medicine.
-
-                    Resources (Maryland):
-                    {RESOURCES_IN_MARYLAND}
-
-      - Conversation_history:
-              - human: "Hello from Bethesda, MD—seeking education admin roles."
-              - ai: "What's your name and address?"
-              - human: "Laura Kim, 7000 Wisconsin Ave, Bethesda, MD."
-              - ai: "Employment status and preferences?"
-              - human: "Employed, open to transitions; education admin or hospitality corp."
-        input: "Any state initiatives or companies in Maryland I should focus on?"
-        output:
-              direct_response_to_the_user: >
-                    Check EARN Maryland for industry-led training and MWE for openings. For
-                    companies in Maryland aligned with your background, look at Marriott (HQ in
-                    Bethesda) for corporate roles and Under Armour (Baltimore) for operations and
-                    admin.
-
-                    Resources (Maryland):
-                    {RESOURCES_IN_MARYLAND}
-
-      - Conversation_history:
-              - human: "Hey—I'm in Richmond, VA looking for programs to upskill."
-              - ai: "Name and current address?"
-              - human: "Marcus Allen, 300 E Broad St, Richmond, VA."
-              - ai: "Employment status and interests?"
-              - human: "Unemployed; interested in energy ops or field tech roles."
-        input: "Which Virginia programs and employers should I target?"
-        output:
-              direct_response_to_the_user: >
-                    In Virginia, start with Virginia Career Works for job services and G3/FastForward
-                    for short-term credential funding. Employers to watch in Richmond include
-                    Dominion Energy and regional contractors hiring field techs.
-
-                    Resources (Virginia):
-                    {RESOURCES_IN_VIRGINIA}
-
-      - Conversation_history:
-              - human: "Hi from McLean, VA—I'm exploring tech and consulting."
-              - ai: "What's your name and current address?"
-              - human: "Ravi Shah, 1600 Chain Bridge Rd, McLean, VA."
-              - ai: "Employment status and preferences?"
-              - human: "Employed; open to product or analytics, hybrid OK."
-        input: "Any Virginia state programs and target companies you'd suggest?"
-        output:
-              direct_response_to_the_user: >
-                    Use Virginia Career Works for coaching and job matching, plus FastForward for
-                    credential courses if you want to bolster analytics skills. Nearby employers to
-                    target include Capital One (data/product) and Booz Allen Hamilton (consulting,
-                    analytics).
-
-                    Resources (Virginia):
-                    {RESOURCES_IN_VIRGINIA}
-
-      - Conversation_history:
-              - human: "I'm in Silver Spring, MD—interested in apprenticeships in the trades."
-              - ai: "Name and current address?"
-              - human: "Kevin Ortiz, 8500 Colesville Rd, Silver Spring, MD."
-              - ai: "Employment status and shift preferences?"
-              - human: "Unemployed; day shift preferred, union OK."
-        input: "What Maryland apprenticeship options and employers should I check?"
-        output:
-              direct_response_to_the_user: >
-                    Explore Maryland's Apprenticeship and Training Program (MATP) and EARN Maryland
-                    pathways for entry into skilled trades. In the Baltimore–DC corridor, look at
-                    Northrop Grumman for entry-level manufacturing/assembly and facility roles.
-
-                    Resources (Maryland):
-                    {RESOURCES_IN_MARYLAND}
-
-      - Conversation_history:
-              - human: "From Newport News, VA—I'd like shipbuilding apprenticeships."
-              - ai: "Name and current address?"
-              - human: "Aisha Carter, 1001 Jefferson Ave, Newport News, VA."
-              - ai: "Employment status and schedule?"
-              - human: "Unemployed; full-time."
-        input: "Which Virginia programs and companies fit shipbuilding/trades?"
-        output:
-              direct_response_to_the_user: >
-                    Use Virginia Registered Apprenticeships and FastForward for credential support.
-                    Huntington Ingalls (Newport News Shipbuilding) is a prime employer for
-                    apprenticeships and skilled trades locally.
-
-                    Resources (Virginia):
-                    {RESOURCES_IN_VIRGINIA}
+                    Great. I'm connecting you with our Entrepreneur specialist who will guide
+                    permits, pricing, cottage food rules, and a lean launch plan for 33130.
+                    One moment while I transfer you.
+              next_agent: "Entrepreneur"
+              task_to_handoff_to_the_next_agent: >
+                    Guide Jacob Rivera (33130, between jobs) to launch a home bakery: permits,
+                    pricing, cottage food laws, and basic marketing.

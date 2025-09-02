@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Literal
 
 from langgraph.graph import MessagesState
-from pydantic import AliasChoices, BaseModel, Field
+from pydantic import BaseModel, Field
 
 
 class ReceptionistOutputSchema(BaseModel):
@@ -22,37 +22,25 @@ class ReceptionistOutputSchema(BaseModel):
             "If this field is null, a handoff is necessary."
         ),
     )
-    user_name: str | None = Field(
+    name: str | None = Field(
         default=None,
         description="The name of the user.",
     )
 
-    user_current_address: str | None = Field(
-        default=None,
-        description="The user's current residential address.",
-        validation_alias=AliasChoices("user_current_address", "user_address"),
-    )
-    user_employment_status: (
+    current_employment_status: (
         Literal["employed", "unemployed", "self-employed", "retired"] | None
     ) = Field(
         default=None,
         description="The employment status of the user.",
     )
-    user_last_job: str | None = Field(
+
+    zip_code: str | None = Field(
         default=None,
-        description="A description of the user's last job.",
+        description="The zip code of the user.",
     )
-    user_last_job_location: str | None = Field(
+    what_is_the_user_looking_for: str | None = Field(
         default=None,
-        description="The location of the user's last job.",
-    )
-    user_last_job_company: str | None = Field(
-        default=None,
-        description="The company of the user's last job.",
-    )
-    user_job_preferences: str | None = Field(
-        default=None,
-        description="A summary of the user's career interests, needs, and preferences (e.g., industry, role type, salary expectations, location).",
+        description="What the user is looking for.",
     )
 
     @property
@@ -60,24 +48,19 @@ class ReceptionistOutputSchema(BaseModel):
         """Return True if at least one user profile field is present and filled.
 
         Checked fields:
-        - user_name
-        - user_current_address
-        - user_employment_status
-        - user_last_job
-        - user_last_job_location
-        - user_last_job_company
-        - user_job_preferences
+        - name
+        - current_employment_status
+        - zip_code
+        - what_is_the_user_looking_for
+
 
         "Filled" means non-None and, for strings, non-empty after stripping.
         """
         candidates = (
-            self.user_name,
-            self.user_current_address,
-            self.user_employment_status,
-            self.user_last_job,
-            self.user_last_job_location,
-            self.user_last_job_company,
-            self.user_job_preferences,
+            self.name,
+            self.current_employment_status,
+            self.zip_code,
+            self.what_is_the_user_looking_for,
         )
         for value in candidates:
             if isinstance(value, str):
@@ -92,22 +75,16 @@ class ReceptionistOutputSchema(BaseModel):
         """Return True if all user info fields are present (not None).
 
         Fields checked:
-        - user_name
-        - user_current_address
-        - user_employment_status
-        - user_last_job
-        - user_last_job_location
-        - user_last_job_company
-        - user_job_preferences
+        - name
+        - current_employment_status
+        - zip_code
+        - what_is_the_user_looking_for
         """
         required_fields = (
-            self.user_name,
-            self.user_current_address,
-            self.user_employment_status,
-            self.user_last_job,
-            self.user_last_job_location,
-            self.user_last_job_company,
-            self.user_job_preferences,
+            self.name,
+            self.current_employment_status,
+            self.zip_code,
+            self.what_is_the_user_looking_for,
         )
         return all(value is not None for value in required_fields)
 
@@ -116,30 +93,13 @@ class UserProfileSchema(BaseModel):
     """Holds all information related to a user's profile."""
 
     name: str | None = Field(default=None, description="The user's name.")
-    current_address: str | None = Field(
-        default=None,
-        description="The user's current residential address.",
-        validation_alias=AliasChoices(
-            "current_address", "user_current_address", "user_address"
-        ),
-    )
-    employment_status: (
+    current_employment_status: (
         Literal["employed", "unemployed", "self-employed", "retired"] | None
     ) = Field(default=None, description="The user's current employment status.")
-    last_job: str | None = Field(
+    zip_code: str | None = Field(default=None, description="The user's zip code.")
+    what_is_the_user_looking_for: str | None = Field(
         default=None,
-        description="A description of the user's most recent job title or role.",
-    )
-    last_job_location: str | None = Field(
-        default=None,
-        description="The location (e.g., city, state) of the user's last job.",
-    )
-    last_job_company: str | None = Field(
-        default=None, description="The name of the company where the user last worked."
-    )
-    job_preferences: str | None = Field(
-        default=None,
-        description="A summary of the user's career interests, needs, and preferences (e.g., industry, role type, salary expectations).",
+        description="What the user is looking for.",
     )
 
     @property
@@ -156,12 +116,9 @@ class UserProfileSchema(BaseModel):
             value is not None
             for value in (
                 self.name,
-                self.current_address,
-                self.employment_status,
-                self.last_job,
-                self.last_job_location,
-                self.last_job_company,
-                self.job_preferences,
+                self.current_employment_status,
+                self.zip_code,
+                self.what_is_the_user_looking_for,
             )
         )
 
@@ -174,9 +131,9 @@ class UserProfileSchema(BaseModel):
         """
         return (
             f"User: {self.name or 'Unknown'}, "
-            f"Location: {self.current_address or 'Unknown'}, "
-            f"Status: {self.employment_status or 'Unknown'}, "
-            f"Last Job: {self.last_job or 'Unknown'} at {self.last_job_company or 'Unknown'}"
+            f"Status: {self.current_employment_status or 'Unknown'}, "
+            f"Zip Code: {self.zip_code or 'Unknown'}, "
+            f"Looking For: {self.what_is_the_user_looking_for or 'Unknown'}"
         )
 
 
@@ -190,7 +147,9 @@ class ReceptionistSubgraphState(MessagesState):
     )
     user_profile: UserProfileSchema = Field(default_factory=UserProfileSchema)
     user_request: str | None = Field(default=None)
-    selected_agent: Literal["react"] | None = Field(default=None)
+    selected_agent: (
+        Literal["Jobs", "Educator", "Events", "CareerCoach", "Entrepreneur"] | None
+    ) = Field(default=None)
     rationale_of_the_handoff: str | None = Field(default=None)
 
     fallback_message: str | None = Field(default=None)
@@ -214,20 +173,28 @@ if __name__ == "__main__":
     )
     if c.user_info_complete is not False:
         raise AssertionError("Expected incomplete user info by default")
+    if c.at_least_one_user_profile_field_is_filled is not False:
+        raise AssertionError("Expected no filled profile fields by default")
 
     # user_info_complete True when all user fields are provided
     d = ReceptionistOutputSchema(
         direct_response_to_the_user=None,
-        user_name="Jane Doe",
-        user_current_address="456 Oak St, Rockville, MD",
-        user_employment_status="employed",
-        user_last_job="Barista",
-        user_last_job_location="Rockville, MD",
-        user_last_job_company="Starbucks",
-        user_job_preferences=("Full-time admin roles in Montgomery County"),
+        name="Jane Doe",
+        current_employment_status="employed",
+        zip_code="20850",
+        what_is_the_user_looking_for=("Full-time admin roles in Montgomery County"),
     )
     if d.user_info_complete is not True:
         raise AssertionError("Expected complete user info when all fields set")
+    if d.at_least_one_user_profile_field_is_filled is not True:
+        raise AssertionError("Expected at least one profile field to be filled")
+
+    # at_least_one_user_profile_field_is_filled should ignore whitespace-only
+    e = ReceptionistOutputSchema(zip_code="  20850  ")
+    if e.at_least_one_user_profile_field_is_filled is not True:
+        raise AssertionError(
+            "Expected True when a single non-empty trimmed field is provided"
+        )
 
     print("ReceptionistOutputSchema tests passed.")
 
@@ -242,12 +209,9 @@ if __name__ == "__main__":
     # 2) Fully populated: valid
     up_b = UserProfileSchema(
         name="Jane Doe",
-        current_address="456 Oak St, Rockville, MD",
-        employment_status="employed",
-        last_job="Barista",
-        last_job_location="Rockville, MD",
-        last_job_company="Starbucks",
-        job_preferences="Full-time admin roles in Montgomery County",
+        current_employment_status="employed",
+        zip_code="20850",
+        what_is_the_user_looking_for=("Full-time admin roles in Montgomery County"),
     )
     if up_b.is_valid is not True:
         raise AssertionError("Expected valid user profile when all fields set")
@@ -256,12 +220,9 @@ if __name__ == "__main__":
     # 3) Missing one field: invalid
     up_c = UserProfileSchema(
         name="Jane Doe",
-        current_address="456 Oak St, Rockville, MD",
-        employment_status="employed",
-        last_job="Barista",
-        last_job_location="Rockville, MD",
-        last_job_company=None,
-        job_preferences="Full-time admin roles in Montgomery County",
+        current_employment_status="employed",
+        zip_code=None,
+        what_is_the_user_looking_for=("Full-time admin roles in Montgomery County"),
     )
     if up_c.is_valid is not False:
         raise AssertionError("Expected invalid user profile when field missing")
@@ -274,18 +235,5 @@ if __name__ == "__main__":
     example_state = ReceptionistSubgraphState()
     print("\nPretty JSON for default ReceptionistSubgraphState:\n")
     print(format_as_json(example_state))
-
-    # Aliases acceptance tests
-    print("\nRunning alias acceptance tests...")
-    alias_out = ReceptionistOutputSchema(
-        direct_response_to_the_user=None,
-        user_address="123 Main St",
-    )
-    if alias_out.user_current_address != "123 Main St":
-        raise AssertionError("Alias 'user_address' not mapped to user_current_address")
-
-    alias_profile = UserProfileSchema(user_address="456 Oak St")
-    if alias_profile.current_address != "456 Oak St":
-        raise AssertionError("Alias 'user_address' not mapped to current_address")
 
 # %%

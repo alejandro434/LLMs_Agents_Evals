@@ -6,13 +6,17 @@ uv run -m src.graphs.receptionist_subgraph.chains
 # %%
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from langchain_core.messages import BaseMessage
+from pydantic import BaseModel
 
 from src.graphs.llm_chains_factory.assembling import (
     build_structured_chain,
+)
+from src.graphs.receptionist_subgraph.receptor_chain_factory.assembling import (
+    build_structured_chain as build_structured_chain_from_receptor_chain_factory,
 )
 from src.graphs.receptionist_subgraph.schemas import (
     ReceptionistOutputSchema,
@@ -35,6 +39,8 @@ def get_receptionist_chain(
     k: int = 5,
     temperature: float = 0,
     current_history: Sequence[BaseMessage | dict[str, Any]] | None = None,
+    prefer_langsmith: bool = True,
+    dataset_name: str | None = None,
 ):
     """Construct the receptionist structured-output chain.
 
@@ -42,6 +48,8 @@ def get_receptionist_chain(
         k: Number of few-shot examples to include
         temperature: LLM temperature for response generation
         current_history: Optional conversation history to include in the prompt
+        prefer_langsmith: If True, prefer loading few-shots from LangSmith dataset
+        dataset_name: Optional LangSmith dataset name (defaults to internal name)
 
     Returns:
         A structured chain configured for receptionist tasks
@@ -57,15 +65,16 @@ def get_receptionist_chain(
     except (FileNotFoundError, yaml.YAMLError) as e:
         raise RuntimeError(f"Failed to load receptionist system prompt: {e}") from e
 
-    return build_structured_chain(
+    return build_structured_chain_from_receptor_chain_factory(
         system_prompt=system_prompt,
         output_schema=ReceptionistOutputSchema,
         k=k,
         temperature=temperature,
         postprocess=None,
-        group="Receptionist_user_conversations",
         yaml_path=_BASE_DIR / "fewshots.yml",
         current_history=list(current_history) if current_history else None,
+        prefer_langsmith=prefer_langsmith,
+        dataset_name=dataset_name,
     )
 
 
@@ -108,11 +117,6 @@ def get_profiling_chain(
     )
 
 
-from typing import Literal
-
-from pydantic import BaseModel
-
-
 def get_user_request_extraction_chain(
     *,
     k: int = 5,
@@ -141,7 +145,7 @@ def get_user_request_extraction_chain(
 class AgentSelectionSchema(BaseModel):
     """Agent selection schema."""
 
-    agent_name: Literal["react"]
+    agent_name: Literal["Jobs", "Educator", "Events", "CareerCoach", "Entrepreneur"]
     rationale_of_the_handoff: str
 
 
@@ -205,13 +209,10 @@ if __name__ == "__main__":
         """Quick demo for profiling_chain."""
         test_input = ReceptionistOutputSchema(
             direct_response_to_the_user="I can share local job resources.",
-            user_name="John Doe",
-            user_current_address="123 Main St, Baltimore, MD",
-            user_employment_status="unemployed",
-            user_last_job="Warehouse associate",
-            user_last_job_location="Baltimore, MD",
-            user_last_job_company="Acme Logistics",
-            user_job_preferences="Entry-level IT support in Baltimore",
+            name="John Doe",
+            current_employment_status="unemployed",
+            zip_code="21201",
+            what_is_the_user_looking_for=("Entry-level IT support in Baltimore"),
         ).model_dump_json()
 
         result = await profiling_chain.ainvoke(test_input)
@@ -271,9 +272,16 @@ if __name__ == "__main__":
             print(f"Selected Agent: {result.agent_name}")
             print(f"Rationale: {result.rationale_of_the_handoff[:100]}...")
 
-            # Validate that agent_name is always 'react' (since it's the only available agent)
-            assert result.agent_name == "react", (
-                f"Expected 'react' but got '{result.agent_name}'"
+            # Validate that agent_name is one of the configured agents
+            allowed_agents = {
+                "Jobs",
+                "Educator",
+                "Events",
+                "CareerCoach",
+                "Entrepreneur",
+            }
+            assert result.agent_name in allowed_agents, (
+                f"Unexpected agent '{result.agent_name}'"
             )
             assert result.rationale_of_the_handoff, (
                 f"Missing rationale for test case {i}"

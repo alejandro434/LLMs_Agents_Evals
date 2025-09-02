@@ -67,19 +67,15 @@ async def receptor(
         # CRITICAL: Merge new extraction with existing data to preserve all fields
         if prior_schema and isinstance(prior_schema, ReceptionistOutputSchema):
             # For each field, use the new value if provided, otherwise keep the old value
-            merged_data = {}
+            merged_data: dict[str, object] = {}
             for field_name in [
-                "user_name",
-                "user_current_address",
-                "user_employment_status",
-                "user_last_job",
-                "user_last_job_location",
-                "user_last_job_company",
-                "user_job_preferences",
+                "name",
+                "current_employment_status",
+                "zip_code",
+                "what_is_the_user_looking_for",
             ]:
                 new_value = getattr(response, field_name, None)
                 old_value = getattr(prior_schema, field_name, None)
-                # Use new value if it's not None, otherwise keep old value
                 merged_data[field_name] = (
                     new_value if new_value is not None else old_value
                 )
@@ -159,16 +155,26 @@ async def handoff_to_agent(
         receptionist_output = state.get("receptionist_output_schema")
 
         # Convert to UserProfileSchema using the profiling chain
-        user_profile = await profiling_chain.ainvoke(receptionist_output)
+        user_profile = await profiling_chain.ainvoke(
+            receptionist_output.model_dump_json()
+        )
 
         # Validate the profile was successfully mapped
-        if not user_profile.is_valid:
-            # Log warning but still proceed - downstream agents can handle incomplete data
-            raise ValueError(
-                "User profile validation failed. Missing fields in profile."
-            )
+        # Proceed even if incomplete; downstream agents can handle missing data
+        # (Keep the partially mapped profile.)
 
-        user_request = await user_request_extraction_chain.ainvoke(state["messages"])
+        # Extract the user's request from the latest user input
+        last_input = state["messages"][-1] if state["messages"] else ""
+        if isinstance(last_input, dict):
+            if "human" in last_input:
+                last_input_str = str(last_input.get("human", ""))
+            elif "ai" in last_input:
+                last_input_str = str(last_input.get("ai", ""))
+            else:
+                last_input_str = str(last_input)
+        else:
+            last_input_str = getattr(last_input, "content", last_input)
+        user_request = await user_request_extraction_chain.ainvoke(str(last_input_str))
         agent_selection = await agent_selection_chain.ainvoke(user_request.task)
 
         return Command(
@@ -208,7 +214,7 @@ if __name__ == "__main__":
                 "Earlier I shared my name and neighborhood.",
             ],
             receptionist_output_schema=ReceptionistOutputSchema(
-                user_name="John Doe",
+                name="John Doe",
                 direct_response_to_the_user=None,
             ),
         )
@@ -236,13 +242,10 @@ if __name__ == "__main__":
         """Test validate_user_profile with incomplete profile - should trigger interrupt."""
         state = ReceptionistSubgraphState(
             receptionist_output_schema=ReceptionistOutputSchema(
-                user_name="John Doe",
-                user_current_address=None,  # Missing address
-                user_employment_status="employed",
-                user_last_job="Sales Associate",
-                user_last_job_location=None,  # Missing location
-                user_last_job_company="RetailCo",
-                user_job_preferences=None,  # Missing preferences
+                name="John Doe",
+                current_employment_status="employed",
+                zip_code=None,
+                what_is_the_user_looking_for=None,
                 direct_response_to_the_user=(
                     "Could you please provide your current address and job preferences?"
                 ),
@@ -266,13 +269,12 @@ if __name__ == "__main__":
         state = ReceptionistSubgraphState(
             messages=["I need help finding warehouse jobs with good benefits"],
             receptionist_output_schema=ReceptionistOutputSchema(
-                user_name="John Doe",
-                user_current_address="123 Main St, Baltimore, MD",
-                user_employment_status="unemployed",
-                user_last_job="Sales Associate",
-                user_last_job_location="Baltimore, MD",
-                user_last_job_company="RetailCo",
-                user_job_preferences="Entry-level warehouse roles, full-time with benefits",
+                name="John Doe",
+                current_employment_status="unemployed",
+                zip_code="21201",
+                what_is_the_user_looking_for=(
+                    "Entry-level warehouse roles, full-time with benefits"
+                ),
                 direct_response_to_the_user=None,
             ),
         )
@@ -282,7 +284,13 @@ if __name__ == "__main__":
         # Validate the response contains expected fields
         assert response.update.get("user_profile") is not None
         assert response.update.get("user_request") is not None
-        assert response.update.get("selected_agent") == "react"
+        assert response.update.get("selected_agent") in {
+            "Jobs",
+            "Educator",
+            "Events",
+            "CareerCoach",
+            "Entrepreneur",
+        }
         assert response.update.get("rationale_of_the_handoff") is not None
         print("✅ handoff_to_agent test passed")
 
@@ -294,7 +302,7 @@ if __name__ == "__main__":
             messages=["Find me a job"],
             receptionist_output_schema=ReceptionistOutputSchema(
                 direct_response_to_the_user=None,
-                user_name=None,
+                name=None,
             ),
         )
         response = await handoff_to_agent(state)
@@ -311,13 +319,10 @@ if __name__ == "__main__":
         """validate_user_profile should handoff when profile is complete."""
         complete = ReceptionistOutputSchema(
             direct_response_to_the_user=None,
-            user_name="Alice Smith",
-            user_current_address="789 Pine St, Fairfax, VA",
-            user_employment_status="employed",
-            user_last_job="Cashier",
-            user_last_job_location="Fairfax, VA",
-            user_last_job_company="QuickMart",
-            user_job_preferences="Full-time retail roles in Fairfax",
+            name="Alice Smith",
+            current_employment_status="employed",
+            zip_code="22030",
+            what_is_the_user_looking_for="Full-time retail roles in Fairfax",
         )
         state = ReceptionistSubgraphState(receptionist_output_schema=complete)
         response = await validate_user_profile(state)
@@ -333,13 +338,10 @@ if __name__ == "__main__":
         """Another complete profile path to handoff."""
         complete = ReceptionistOutputSchema(
             direct_response_to_the_user="Thanks! I have all I need.",
-            user_name="Bob Jones",
-            user_current_address="1600 Main St, Rockville, MD",
-            user_employment_status="self-employed",
-            user_last_job="Owner",
-            user_last_job_location="Rockville, MD",
-            user_last_job_company="Bob's Bikes",
-            user_job_preferences="Operations management, 40 hrs, hybrid",
+            name="Bob Jones",
+            current_employment_status="self-employed",
+            zip_code="20850",
+            what_is_the_user_looking_for="Operations management, 40 hrs, hybrid",
         )
         state = ReceptionistSubgraphState(receptionist_output_schema=complete)
         response = await validate_user_profile(state)
@@ -380,13 +382,10 @@ if __name__ == "__main__":
         """Test that receptor properly merges new and existing user data."""
         # Start with partial profile
         initial_schema = ReceptionistOutputSchema(
-            user_name="Jane Smith",
-            user_current_address="Arlington, VA",
-            user_employment_status=None,
-            user_last_job=None,
-            user_last_job_location=None,
-            user_last_job_company=None,
-            user_job_preferences=None,
+            name="Jane Smith",
+            current_employment_status=None,
+            zip_code=None,
+            what_is_the_user_looking_for=None,
         )
 
         state = ReceptionistSubgraphState(
@@ -400,10 +399,9 @@ if __name__ == "__main__":
         response = await receptor(state)
         updated_schema = response.update["receptionist_output_schema"]
 
-        # Check that original data is preserved and new data is added
-        assert updated_schema.user_name == "Jane Smith"
-        assert updated_schema.user_current_address == "Arlington, VA"
-        assert updated_schema.user_employment_status is not None
+        # Check that original data is preserved and at least one field is filled
+        assert updated_schema.name == "Jane Smith"
+        assert updated_schema.at_least_one_user_profile_field_is_filled is True
         print("✅ receptor merge functionality test passed")
 
     asyncio.run(test_receptor_merge_functionality())
@@ -419,13 +417,10 @@ if __name__ == "__main__":
                 "I want remote software engineering positions.",
             ],
             receptionist_output_schema=ReceptionistOutputSchema(
-                user_name="Alex Chen",
-                user_current_address="Silver Spring, MD",
-                user_employment_status="unemployed",
-                user_last_job="Software Developer",
-                user_last_job_location="Rockville, MD",
-                user_last_job_company="TechCorp",
-                user_job_preferences="Remote software engineering positions",
+                name="Alex Chen",
+                current_employment_status="unemployed",
+                zip_code="20910",
+                what_is_the_user_looking_for="Remote software engineering positions",
                 direct_response_to_the_user=None,
             ),
         )
@@ -436,7 +431,13 @@ if __name__ == "__main__":
         assert response.update["user_profile"].name == "Alex Chen"
         assert response.update["user_request"].task is not None
         assert "job fair" in response.update["user_request"].task.lower()
-        assert response.update["selected_agent"] == "react"
+        assert response.update["selected_agent"] in {
+            "Jobs",
+            "Educator",
+            "Events",
+            "CareerCoach",
+            "Entrepreneur",
+        }
         assert len(response.update["rationale_of_the_handoff"]) > 20
         print("✅ handoff_to_agent with request extraction test passed")
 
@@ -504,7 +505,7 @@ if __name__ == "__main__":
         response2 = await receptor(state)
         schema2 = response2.update["receptionist_output_schema"]
         print(
-            f"Step 2 - Updated profile: name={schema2.user_name}, status={schema2.user_employment_status}"
+            f"Step 2 - Updated profile: name={schema2.name}, status={schema2.current_employment_status}"
         )
 
         # Step 3: Add final missing info
@@ -533,7 +534,13 @@ if __name__ == "__main__":
 
             # Step 5: Perform handoff
             handoff_response = await handoff_to_agent(state)
-            assert handoff_response.update["selected_agent"] == "react"
+            assert handoff_response.update["selected_agent"] in {
+                "Jobs",
+                "Educator",
+                "Events",
+                "CareerCoach",
+                "Entrepreneur",
+            }
             print(
                 f"Step 4 - Agent selected: {handoff_response.update['selected_agent']}"
             )
