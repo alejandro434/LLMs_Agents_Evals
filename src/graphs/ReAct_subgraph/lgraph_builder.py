@@ -45,12 +45,11 @@ if __name__ == "__main__":
             ),
             "user_profile": UserProfileSchema(
                 name="John Doe",
-                current_address="123 Main St, Anytown, USA",
-                employment_status="employed",
-                last_job="Software Engineer",
-                last_job_location="Anytown, USA",
-                last_job_company="Acme Corp",
-                job_preferences="Tech roles, full-time",
+                current_employment_status="employed",
+                zip_code="20850",
+                what_is_the_user_looking_for=(
+                    "Find job fairs events in the next 30 days"
+                ),
             ),
             "why_this_agent_can_help": (
                 "I can help the user find job fairs events in the next 30 days."
@@ -88,12 +87,9 @@ if __name__ == "__main__":
                 ),
                 "user_profile": UserProfileSchema(
                     name="Jane Smith",
-                    current_address="456 Oak St, Rockville, MD",
-                    employment_status="unemployed",
-                    last_job="Barista",
-                    last_job_location="Rockville, MD",
-                    last_job_company="Starbucks",
-                    job_preferences="Entry-level roles in MD",
+                    current_employment_status="unemployed",
+                    zip_code="20852",
+                    what_is_the_user_looking_for="Entry-level roles in MD",
                 ),
                 "why_this_agent_can_help": (
                     "I can help the user find job fairs events in the next 30 days."

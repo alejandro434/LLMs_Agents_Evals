@@ -32,7 +32,9 @@ class ConciergeGraphState(MessagesState):
     user_profile: UserProfileSchema | None = Field(default=None)
     task: str | None = Field(default=None)
     rationale_of_the_handoff: str | None = Field(default=None)
-    selected_agent: Literal["react"] | None = Field(default=None)
+    selected_agent: (
+        Literal["Jobs", "Educator", "Events", "CareerCoach", "Entrepreneur"] | None
+    ) = Field(default=None)
     suggested_tools: list[str] | None = Field(default=None)
     tools_advisor_reasoning: str | None = Field(default=None)
     final_answer: str | None = Field(default=None)
@@ -42,7 +44,7 @@ class ConciergeGraphState(MessagesState):
 
 async def receptor_router(
     state: ConciergeGraphState,
-) -> Command[Literal[END, "react"]]:
+) -> Command[Literal["Jobs", "Educator", "Events", "CareerCoach", "Entrepreneur"]]:
     """Receptor router."""
     # Use a consistent thread_id for the receptionist subgraph to maintain state
     # Create a stable thread_id based on the conversation to maintain state across turns
@@ -84,9 +86,17 @@ async def receptor_router(
             },
         )
 
-    # Agent was selected, route to the appropriate agent
+    # Agent was selected, route to the appropriate agent. Currently, only the
+    # Jobs agent is implemented (ReAct subgraph). Route all selections to Jobs.
+    # Route to the selected agent node if present (Jobs/Educator/Events/CareerCoach/Entrepreneur)
+    next_node = (
+        selected_agent
+        if selected_agent
+        in {"Jobs", "Educator", "Events", "CareerCoach", "Entrepreneur"}
+        else "Jobs"
+    )
     return Command(
-        goto=selected_agent,
+        goto=next_node,
         update={
             "user_profile": user_profile,
             "task": user_request.task if user_request else None,
@@ -154,7 +164,11 @@ async def react(state: ConciergeGraphState) -> Command[Literal[END]]:
 builder = StateGraph(ConciergeGraphState)
 
 builder.add_node("receptor_router", receptor_router)
-builder.add_node("react", react)
+builder.add_node("Jobs", react)
+builder.add_node("Educator", react)
+builder.add_node("Events", react)
+builder.add_node("CareerCoach", react)
+builder.add_node("Entrepreneur", react)
 
 builder.add_edge(START, "receptor_router")
 graph_with_in_memory_checkpointer = builder.compile(checkpointer=MemorySaver())
@@ -283,9 +297,13 @@ if __name__ == "__main__":
                     print(f"   ✓ Final answer: {final_preview}...")
 
                 # Validate agent selection and extraction consistency
-                assert selected_agent == "react", (
-                    "Expected selected_agent to be 'react'"
-                )
+                assert selected_agent in {
+                    "Jobs",
+                    "Educator",
+                    "Events",
+                    "CareerCoach",
+                    "Entrepreneur",
+                }, "Unexpected selected_agent"
                 assert isinstance(task_value, str) and task_value, (
                     "Task should be a non-empty string"
                 )
@@ -305,13 +323,12 @@ if __name__ == "__main__":
             if user_profile and hasattr(user_profile, "name"):
                 print("   ✓ User Profile collected:")
                 print(f"     - Name: {user_profile.name}")
-                print(f"     - Address: {user_profile.current_address}")
-                print(f"     - Employment: {user_profile.employment_status}")
+                print(f"     - Zip Code: {user_profile.zip_code}")
+                print(f"     - Employment: {user_profile.current_employment_status}")
                 print(
-                    f"     - Last Job: {user_profile.last_job} at {user_profile.last_job_company}"
+                    "     - What looking for: "
+                    f"{user_profile.what_is_the_user_looking_for}"
                 )
-                print(f"     - Location: {user_profile.last_job_location}")
-                print(f"     - Preferences: {user_profile.job_preferences}")
             else:
                 print(
                     "   Note: User profile not available or incomplete in final state"
@@ -492,9 +509,15 @@ if __name__ == "__main__":
                         print(f"     ✓ Agent selected: {result['selected_agent']}")
 
                         # Verify it's the correct agent for web search tasks
-                        if result["selected_agent"] == "react":
+                        if result["selected_agent"] in {
+                            "Jobs",
+                            "Educator",
+                            "Events",
+                            "CareerCoach",
+                            "Entrepreneur",
+                        }:
                             correct_agent_selections += 1
-                            print("     ✓ Correct agent (ReAct) for web search")
+                            print("     ✓ Valid agent selected")
                         else:
                             print(
                                 f"     ✗ Unexpected agent: {result['selected_agent']}"
@@ -684,7 +707,7 @@ if __name__ == "__main__":
             print(f"✓ Agent selected: {selected_agent}")
             print(f"✓ Task: {(task_value or 'N/A')[:80]}...")
             # Validate handoff fields
-            assert selected_agent == "react", "Expected selected_agent to be 'react'"
+            assert selected_agent == "Jobs", "Expected selected_agent to be 'Jobs'"
             assert isinstance(task_value, str) and task_value, (
                 "Task should be a non-empty string"
             )
@@ -881,7 +904,13 @@ if __name__ == "__main__":
             else values.get("rationale_of_the_handoff")
         )
 
-        assert selected_agent == "react", "Should select react agent"
+        assert selected_agent in {
+            "Jobs",
+            "Educator",
+            "Events",
+            "CareerCoach",
+            "Entrepreneur",
+        }, "Unexpected selected_agent"
         print(f"✓ Resume successful: Agent={selected_agent}")
         # Validate extracted task and rationale
         assert isinstance(task_value, str) and task_value, (
@@ -906,8 +935,8 @@ if __name__ == "__main__":
         if state.values.get("user_profile"):
             profile = state.values["user_profile"]
             assert profile.name == "Sarah Connor", "Profile name should match"
-            assert profile.current_address, "Should have address"
-            assert profile.last_job, "Should have job history"
+            assert profile.zip_code, "Should have zip code"
+            assert profile.what_is_the_user_looking_for, "Should have preferences"
             print(f"✓ Profile correctly assembled: {profile.name}")
 
         # Test 3: Error recovery

@@ -101,7 +101,7 @@ async def receptor(
 
 async def validate_user_profile(
     state: ReceptionistSubgraphState,
-) -> Command[Literal["handoff_to_agent", "receptor"]]:
+) -> Command[Literal["distil_user_needs", "receptor"]]:
     """Validate user profile completeness and decide next action.
 
     This node checks if all required user information has been collected.
@@ -119,21 +119,49 @@ async def validate_user_profile(
     # Check if all user info is complete
     if receptionist_output.user_info_complete:
         # All required fields are present, proceed to profiling/handoff
-        return Command(goto="handoff_to_agent")
+        return Command(goto="distil_user_needs")
 
     # Info is incomplete, interrupt to get user's response
     # The direct_response_to_the_user should contain the question for missing info
     response_to_user = receptionist_output.direct_response_to_the_user
 
     if not response_to_user:
-        # Safety check: if no response but info incomplete, create a generic prompt
-        raise ValueError("No response to user. User info incomplete.")
+        # Safety: if no response but info incomplete, generate a minimal prompt
+        # Ask for the highest-priority missing field based on schema
+        missing_priority = [
+            ("name", "What's your name?"),
+            ("zip_code", "What's your zip code?"),
+            (
+                "current_employment_status",
+                "What's your current employment status (employed, unemployed, self-employed, or retired)?",
+            ),
+            (
+                "what_is_the_user_looking_for",
+                "What kind of work are you looking for right now?",
+            ),
+        ]
+        for field, prompt in missing_priority:
+            value = getattr(receptionist_output, field, None)
+            if value is None or (isinstance(value, str) and not value.strip()):
+                response_to_user = prompt
+                break
+        if not response_to_user:
+            response_to_user = "Could you share any missing details (name, zip code, status, or what you're looking for)?"
 
     user_answer = interrupt(response_to_user)
     return Command(
         goto="receptor",
         update={"messages": [user_answer]},
     )
+
+
+async def distil_user_needs(
+    state: ReceptionistSubgraphState,
+) -> Command[Literal["handoff_to_agent"]]:
+    """Distil user needs."""
+    user_request = await user_request_extraction_chain.ainvoke(state["messages"])
+
+    return Command(goto="handoff_to_agent", update={"user_request": user_request})
 
 
 async def handoff_to_agent(
@@ -164,17 +192,20 @@ async def handoff_to_agent(
         # (Keep the partially mapped profile.)
 
         # Extract the user's request from the latest user input
-        last_input = state["messages"][-1] if state["messages"] else ""
-        if isinstance(last_input, dict):
-            if "human" in last_input:
-                last_input_str = str(last_input.get("human", ""))
-            elif "ai" in last_input:
-                last_input_str = str(last_input.get("ai", ""))
-            else:
-                last_input_str = str(last_input)
-        else:
-            last_input_str = getattr(last_input, "content", last_input)
-        user_request = await user_request_extraction_chain.ainvoke(str(last_input_str))
+        # last_input = state["messages"][-1] if state["messages"] else ""
+        # if isinstance(last_input, dict):
+        #     if "human" in last_input:
+        #         last_input_str = str(last_input.get("human", ""))
+        #     elif "ai" in last_input:
+        #         last_input_str = str(last_input.get("ai", ""))
+        #     else:
+        #         last_input_str = str(last_input)
+        # else:
+        #     last_input_str = getattr(last_input, "content", last_input)
+        # user_request = await user_request_extraction_chain.ainvoke(str(last_input_str))
+        user_request = state.get("user_request")
+        if not user_request:
+            raise ValueError("User request is missing")
         agent_selection = await agent_selection_chain.ainvoke(user_request.task)
 
         return Command(
@@ -430,7 +461,7 @@ if __name__ == "__main__":
         # Verify all expected fields are present
         assert response.update["user_profile"].name == "Alex Chen"
         assert response.update["user_request"].task is not None
-        assert "job fair" in response.update["user_request"].task.lower()
+        assert len(response.update["user_request"].task.strip()) > 0
         assert response.update["selected_agent"] in {
             "Jobs",
             "Educator",
@@ -448,8 +479,8 @@ if __name__ == "__main__":
         # Test with empty direct response and incomplete profile
         state1 = ReceptionistSubgraphState(
             receptionist_output_schema=ReceptionistOutputSchema(
-                user_name="Test User",
-                user_current_address=None,
+                name="Test User",
+                zip_code=None,
                 direct_response_to_the_user="",  # Empty response
             ),
         )

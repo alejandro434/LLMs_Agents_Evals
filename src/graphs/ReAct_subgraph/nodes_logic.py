@@ -42,9 +42,13 @@ async def tools_advisor_node(
         missing_or_invalid.append(
             f"Tools advisor node: user_profile has invalid type: {value_type}, expected UserProfileSchema"
         )
-    if not state.get("why_this_agent_can_help"):
+    # Allow fallback to receptionist rationale field for integration
+    reason = state.get("why_this_agent_can_help") or state.get(
+        "rationale_of_the_handoff"
+    )
+    if not reason:
         missing_or_invalid.append(
-            "Tools advisor node: why_this_agent_can_help is missing"
+            "Tools advisor node: why_this_agent_can_help/rationale_of_the_handoff is missing"
         )
 
     if missing_or_invalid:
@@ -53,7 +57,7 @@ async def tools_advisor_node(
         raise ValueError(f"Missing/invalid fields: {issues}")
     task = state.get("user_request").task
     user_profile = state.get("user_profile")
-    why_this_agent_can_help = state.get("why_this_agent_can_help")
+    why_this_agent_can_help = reason
     context_injection = (
         f"In order to suggest relevant or useful tools to execute the above mentioned task, you have to consider the following:\n"
         f"The user's profile is: {user_profile}\n"
@@ -73,7 +77,7 @@ async def tools_advisor_node(
             "tools_advisor_reasoning": tools_advisor_response.tools_advisor_reasoning,
             "user_request": state.get("user_request"),
             "user_profile": state.get("user_profile"),
-            "why_this_agent_can_help": state.get("why_this_agent_can_help"),
+            "why_this_agent_can_help": why_this_agent_can_help,
         },
     )
 
@@ -90,8 +94,13 @@ async def react_node(state: ReActSubgraphState) -> Command[Literal[END]]:
         missing_or_invalid.append(
             f"ReAct node: user_profile has invalid type: {value_type}, expected UserProfileSchema"
         )
-    if not state.get("why_this_agent_can_help"):
-        missing_or_invalid.append("ReAct node: why_this_agent_can_help is missing")
+    reason = state.get("why_this_agent_can_help") or state.get(
+        "rationale_of_the_handoff"
+    )
+    if not reason:
+        missing_or_invalid.append(
+            "ReAct node: why_this_agent_can_help/rationale_of_the_handoff is missing"
+        )
     if not state.get("suggested_tools"):
         missing_or_invalid.append("ReAct node: suggested_tools is missing")
     if not state.get("tools_advisor_reasoning"):
@@ -103,7 +112,7 @@ async def react_node(state: ReActSubgraphState) -> Command[Literal[END]]:
         raise ValueError(f"Missing/invalid fields: {issues}")
     task = state.get("user_request").task
     user_profile = state.get("user_profile")
-    why_this_agent_can_help = state.get("why_this_agent_can_help")
+    why_this_agent_can_help = reason
     suggested_tools = state.get("suggested_tools")
     tools_advisor_reasoning = state.get("tools_advisor_reasoning")
     react_input = f"""
@@ -140,10 +149,11 @@ if __name__ == "__main__":
             ),
             user_profile=UserProfileSchema(
                 name="John Doe",
-                current_address="123 Main St, Anytown, USA",
-                employment_status="employed",
-                last_job="Software Engineer",
-                last_job_location="Anytown, USA",
+                current_employment_status="employed",
+                zip_code="20850",
+                what_is_the_user_looking_for=(
+                    "Find job fairs events in the next 30 days"
+                ),
             ),
             why_this_agent_can_help="I can help the user find job fairs events in the next 30 days.",
         )
@@ -160,10 +170,11 @@ if __name__ == "__main__":
             ),
             user_profile=UserProfileSchema(
                 name="John Doe",
-                current_address="123 Main St, Anytown, USA",
-                employment_status="employed",
-                last_job="Software Engineer",
-                last_job_location="Anytown, USA",
+                current_employment_status="employed",
+                zip_code="20850",
+                what_is_the_user_looking_for=(
+                    "Find job fairs events in the next 30 days"
+                ),
             ),
             why_this_agent_can_help="I can help the user find job fairs events in the next 30 days.",
             suggested_tools=["websearch"],
