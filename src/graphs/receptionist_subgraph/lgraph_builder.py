@@ -96,6 +96,9 @@ if __name__ == "__main__":
             ):
                 for node_name, node_output in update.items():
                     print(f"  - Node '{node_name}' completed")
+                    if node_output is None:
+                        # Some updates may emit None for a node; skip safely
+                        continue
                     if "receptionist_output_schema" in node_output:
                         output = node_output["receptionist_output_schema"]
                         if hasattr(output, "user_name") and output.user_name:
@@ -111,6 +114,16 @@ if __name__ == "__main__":
                         profile = node_output["user_profile"]
                         if hasattr(profile, "is_valid"):
                             print(f"    User profile validated: {profile.is_valid}")
+                    # Show agent selection and extracted task if present
+                    if "selected_agent" in node_output:
+                        print(f"    Selected agent: {node_output['selected_agent']}")
+                    if "user_request" in node_output:
+                        request = node_output["user_request"]
+                        task_preview = (
+                            request.task[:60] if hasattr(request, "task") else ""
+                        )
+                        if task_preview:
+                            print(f"    Extracted task: {task_preview}...")
 
             # Get final state
             final_state = await receptionist_graph.aget_state(config)
@@ -226,6 +239,19 @@ if __name__ == "__main__":
         # When profile is complete, there should be no direct response (handoff occurs)
         assert receptionist_output.direct_response_to_the_user is None, (
             "Should not have direct response when profile is complete (handoff occurs)"
+        )
+
+        # Verify agent selection and request extraction on handoff
+        assert "selected_agent" in result, "Should include selected_agent on handoff"
+        assert result["selected_agent"] == "react", (
+            "Expected agent selection to be 'react'"
+        )
+        assert "user_request" in result, "Should include extracted user_request"
+        assert getattr(result["user_request"], "task", None), (
+            "user_request.task should be populated"
+        )
+        assert len(result.get("rationale_of_the_handoff", "")) > 10, (
+            "Should include non-empty handoff rationale"
         )
 
         print("\n✅ Complete profile test passed!")
@@ -351,6 +377,20 @@ if __name__ == "__main__":
                         print("✓ Valid user profile created")
                         print(f"  Profile summary: {profile.profile_summary}")
 
+                    # Verify agent selection and request extraction on completion
+                    assert "selected_agent" in result, (
+                        "Should include selected_agent after completion"
+                    )
+                    assert result["selected_agent"] == "react", (
+                        "Expected agent selection to be 'react'"
+                    )
+                    assert "user_request" in result, (
+                        "Should include extracted user_request after completion"
+                    )
+                    assert getattr(result["user_request"], "task", None), (
+                        "user_request.task should be populated after completion"
+                    )
+
                     break
 
             print("\n" + "=" * 60)
@@ -456,6 +496,17 @@ if __name__ == "__main__":
                 "Should extract info even after long conversation"
             )
             print(f"  ✓ Handled long conversation, extracted: {output.user_name}")
+
+            # Verify agent selection and request extraction present in final state
+            assert state.values.get("selected_agent") == "react", (
+                "Expected agent selection to be 'react'"
+            )
+            assert state.values.get("user_request") is not None, (
+                "Should include extracted user_request in state"
+            )
+            assert len(state.values.get("rationale_of_the_handoff", "")) > 10, (
+                "Should include non-empty handoff rationale in state"
+            )
 
             print("\n✅ STATE RECOVERY AND ERROR HANDLING TEST PASSED!")
 
