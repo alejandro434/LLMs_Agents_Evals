@@ -92,7 +92,7 @@ async def receptor(
 
     except Exception as e:
         # Handle chain invocation errors gracefully
-        print(f"Error in receptionist chain in the receptor node: {e}")
+        raise ValueError(f"Error in receptionist chain in the receptor node: {e}.")
 
     return Command(
         goto="validate_user_profile",
@@ -131,11 +131,7 @@ async def validate_user_profile(
 
     if not response_to_user:
         # Safety check: if no response but info incomplete, create a generic prompt
-        response_to_user = (
-            "I need a bit more information to help you better. "
-            "Could you please provide any missing details about your name, address, "
-            "employment status, or job preferences?"
-        )
+        raise ValueError("No response to user. User info incomplete.")
 
     user_answer = interrupt(response_to_user)
     return Command(
@@ -168,7 +164,9 @@ async def handoff_to_agent(
         # Validate the profile was successfully mapped
         if not user_profile.is_valid:
             # Log warning but still proceed - downstream agents can handle incomplete data
-            print("Warning: User profile validation failed. Missing fields in profile.")
+            raise ValueError(
+                "User profile validation failed. Missing fields in profile."
+            )
 
         user_request = await user_request_extraction_chain.ainvoke(state["messages"])
         agent_selection = await agent_selection_chain.ainvoke(user_request.task)
@@ -185,7 +183,7 @@ async def handoff_to_agent(
 
     except Exception as e:
         # In case of profiling failure, create a minimal profile from available data
-        print(f"Error in profiling in the handoff_to_agent node: {e}.")
+        raise ValueError(f"Error in profiling in the handoff_to_agent node: {e}.")
 
 
 if __name__ == "__main__":

@@ -20,7 +20,10 @@ from src.graphs.ReAct_subgraph.lgraph_builder import (
 from src.graphs.receptionist_subgraph.lgraph_builder import (
     graph_with_in_memory_checkpointer as receptor_router_subgraph,
 )
-from src.graphs.receptionist_subgraph.schemas import UserProfileSchema
+from src.graphs.receptionist_subgraph.schemas import (
+    UserProfileSchema,
+    UserRequestExtractionSchema,
+)
 
 
 class ConciergeGraphState(MessagesState):
@@ -107,11 +110,28 @@ async def react(state: ConciergeGraphState) -> Command[Literal[END]]:
     else:
         config = {"configurable": {"thread_id": "react_default"}}
 
+    if not state.get("task"):
+        raise ValueError("React node: task is missing")
     # Import the schema needed for the user_request
-    from src.graphs.receptionist_subgraph.schemas import UserRequestExtractionSchema
 
     # Create a UserRequestExtractionSchema object from the task string
-    user_request = UserRequestExtractionSchema(task=state.get("task") or "")
+    user_request = UserRequestExtractionSchema(task=state.get("task"))
+
+    missing_or_invalid: list[str] = []
+    if not state.get("user_profile"):
+        missing_or_invalid.append("React node: user_profile is missing")
+    elif not isinstance(state.get("user_profile"), UserProfileSchema):
+        value_type = type(state.get("user_profile")).__name__
+        missing_or_invalid.append(
+            f"React node: user_profile has invalid type: {value_type}, expected UserProfileSchema"
+        )
+    if not state.get("rationale_of_the_handoff"):
+        missing_or_invalid.append("React node: rationale_of_the_handoff is missing")
+
+    if missing_or_invalid:
+        issues = ", ".join(missing_or_invalid)
+        print(f"react input issues: {issues}")
+        raise ValueError(f"Missing/invalid fields: {issues}")
 
     _input = {
         "user_request": user_request,
@@ -226,13 +246,9 @@ if __name__ == "__main__":
             )
             test_input4 = {"messages": messages.copy()}
 
-            # Invoke; react subgraph may raise due to input mismatch. If it does,
-            # we fall back to checking the saved state.
             result4 = None
-            # try:
+
             result4 = await concierge_graph.ainvoke(test_input4, config, debug=True)
-            # except Exception as e:
-            #     print(f" ⚠️⚠️⚠️ React subgraph raised: {str(e)[:120]}...")
 
             # Use result if available; otherwise, read from state
             final_state = await concierge_graph.aget_state(config)
@@ -646,12 +662,10 @@ if __name__ == "__main__":
 
         test_input3 = {"messages": messages_complete}
         result3 = None
-        try:
-            result3 = await graph_with_in_memory_checkpointer.ainvoke(
-                test_input3, config, debug=True
-            )
-        except Exception as e:
-            print(f"⚠️ React subgraph raised: {str(e)[:120]}...")
+
+        result3 = await graph_with_in_memory_checkpointer.ainvoke(
+            test_input3, config, debug=True
+        )
 
         # Prefer result; fallback to state
         state_after = await graph_with_in_memory_checkpointer.aget_state(config)
@@ -722,25 +736,83 @@ if __name__ == "__main__":
         print("\n--- Test 5: Streaming Support ---")
 
         stream_config = {"configurable": {"thread_id": str(uuid.uuid4())}}
-        stream_input = {
-            "messages": [
-                "Hi, I'm Emma Watson.",
-                "I live at 321 AI Drive, Austin, TX. I'm employed.",
-                "I'm a Data Scientist at DataCorp in Austin.",
-                "Looking for senior data science roles, remote only.",
-                "Search for remote data science positions with good work-life balance",
-            ]
-        }
 
+        # Build conversation incrementally to test streaming properly
+        messages = []
         updates_count = 0
+
+        # Step 1: Initial greeting
+        messages.append("Hi, I'm Emma Watson.")
+        print("Sending: Initial greeting...")
         async for update in graph_with_in_memory_checkpointer.astream(
-            stream_input, stream_config, stream_mode="updates", debug=True
+            {"messages": messages.copy()},
+            stream_config,
+            stream_mode="updates",
+            debug=False,
         ):
             updates_count += 1
             if "receptor_router" in update:
-                print(f"✓ Streamed update {updates_count}: receptor_router")
+                print(
+                    f"  ✓ Streamed update {updates_count}: receptor_router (greeting)"
+                )
+
+        # Step 2: Add address and employment
+        messages.append("I live at 321 AI Drive, Austin, TX. I'm employed.")
+        print("Sending: Address and employment...")
+        async for update in graph_with_in_memory_checkpointer.astream(
+            {"messages": messages.copy()},
+            stream_config,
+            stream_mode="updates",
+            debug=False,
+        ):
+            updates_count += 1
+            if "receptor_router" in update:
+                print(f"  ✓ Streamed update {updates_count}: receptor_router (address)")
+
+        # Step 3: Add job details
+        messages.append("I'm a Data Scientist at DataCorp in Austin.")
+        print("Sending: Job details...")
+        async for update in graph_with_in_memory_checkpointer.astream(
+            {"messages": messages.copy()},
+            stream_config,
+            stream_mode="updates",
+            debug=False,
+        ):
+            updates_count += 1
+            if "receptor_router" in update:
+                print(f"  ✓ Streamed update {updates_count}: receptor_router (job)")
+
+        # Step 4: Add preferences
+        messages.append("Looking for senior data science roles, remote only.")
+        print("Sending: Job preferences...")
+        async for update in graph_with_in_memory_checkpointer.astream(
+            {"messages": messages.copy()},
+            stream_config,
+            stream_mode="updates",
+            debug=False,
+        ):
+            updates_count += 1
+            if "receptor_router" in update:
+                print(
+                    f"  ✓ Streamed update {updates_count}: receptor_router (preferences)"
+                )
+
+        # Step 5: Make actual job search request (should trigger agent handoff)
+        messages.append(
+            "Search for remote data science positions with good work-life balance"
+        )
+        print("Sending: Job search request...")
+        async for update in graph_with_in_memory_checkpointer.astream(
+            {"messages": messages.copy()},
+            stream_config,
+            stream_mode="updates",
+            debug=False,
+        ):
+            updates_count += 1
+            if "receptor_router" in update:
+                print(f"  ✓ Streamed update {updates_count}: receptor_router (request)")
             elif "react" in update:
-                print(f"✓ Streamed update {updates_count}: react agent")
+                print(f"  ✓ Streamed update {updates_count}: react agent (processing)")
 
         print(f"✓ Total updates streamed: {updates_count}")
 
@@ -791,12 +863,10 @@ if __name__ == "__main__":
         # Now make a job request
         messages.append("Find cybersecurity job openings in California")
         result = None
-        try:
-            result = await graph_with_in_memory_checkpointer.ainvoke(
-                {"messages": messages}, config, debug=True
-            )
-        except Exception as e:
-            print(f"⚠️ React subgraph raised: {str(e)[:120]}...")
+
+        result = await graph_with_in_memory_checkpointer.ainvoke(
+            {"messages": messages}, config, debug=True
+        )
 
         # Prefer result; fallback to state
         state_after = await graph_with_in_memory_checkpointer.aget_state(config)
