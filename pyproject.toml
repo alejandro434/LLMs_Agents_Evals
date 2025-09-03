@@ -28,6 +28,7 @@ dependencies = [
     "agentevals>=0.0.9",
     "langchain-tavily>=0.2.11",
     "langchain-qdrant>=0.2.0",
+    "fastembed>=0.7.3",
 ]
 
 [tool.ruff]
