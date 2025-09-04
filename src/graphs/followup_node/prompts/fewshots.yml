@@ -1,0 +1,9 @@
+fewshots_followup:
+  - input: "I need to find job fairs happening in my area next month"
+  - output: "sure, let me help you with that."
+
+  - input: "Can you help me look for remote software engineering positions?"
+  - output: "yes, let me help you with that."
+
+  - input: "I want to know what training programs are available for healthcare workers in Maryland"
+  - output: "let me help you with that."

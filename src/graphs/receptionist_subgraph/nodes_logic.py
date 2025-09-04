@@ -186,23 +186,6 @@ async def handoff_to_agent(
         user_profile = await profiling_chain.ainvoke(
             receptionist_output.model_dump_json()
         )
-
-        # Validate the profile was successfully mapped
-        # Proceed even if incomplete; downstream agents can handle missing data
-        # (Keep the partially mapped profile.)
-
-        # Extract the user's request from the latest user input
-        # last_input = state["messages"][-1] if state["messages"] else ""
-        # if isinstance(last_input, dict):
-        #     if "human" in last_input:
-        #         last_input_str = str(last_input.get("human", ""))
-        #     elif "ai" in last_input:
-        #         last_input_str = str(last_input.get("ai", ""))
-        #     else:
-        #         last_input_str = str(last_input)
-        # else:
-        #     last_input_str = getattr(last_input, "content", last_input)
-        # user_request = await user_request_extraction_chain.ainvoke(str(last_input_str))
         user_request = state.get("user_request")
         if not user_request:
             raise ValueError("User request is missing")

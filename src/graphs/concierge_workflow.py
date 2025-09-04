@@ -14,6 +14,8 @@ from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.types import Command
 from pydantic import Field
 
+from src.graphs.followup_node.nodes_logic import followup_node
+from src.graphs.followup_node.schemas import FollowupSubgraphState
 from src.graphs.ReAct_subgraph.lgraph_builder import (
     graph_with_in_memory_checkpointer as react_subgraph,
 )
@@ -161,9 +163,33 @@ async def react(state: ConciergeGraphState) -> Command[Literal[END]]:
     )
 
 
+async def follow_up(
+    state: ConciergeGraphState,
+) -> Command[Literal["follow_up", "receptor_router", END]]:
+    """Follow up node."""
+    response = await followup_node(FollowupSubgraphState(messages=state["messages"]))
+    if not response.next_agent:
+        return Command(
+            goto="follow_up",
+            update={
+                "messages": [response.direct_response_to_the_user],
+            },
+        )
+
+    return Command(
+        goto="follow_up",
+        update={
+            "messages": [response.direct_response_to_the_user],
+            "rationale_of_the_handoff": response.guidance_for_distil_user_needs,
+            "user_request": response.user_request,
+        },
+    )
+
+
 builder = StateGraph(ConciergeGraphState)
 
 builder.add_node("receptor_router", receptor_router)
+builder.add_node("follow_up", follow_up)
 builder.add_node("Jobs", react)
 builder.add_node("Educator", react)
 builder.add_node("Events", react)

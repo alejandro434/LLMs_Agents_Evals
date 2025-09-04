@@ -97,9 +97,9 @@ class UserProfileSchema(BaseModel):
         Literal["employed", "unemployed", "self-employed", "retired"] | None
     ) = Field(default=None, description="The user's current employment status.")
     zip_code: str | None = Field(default=None, description="The user's zip code.")
-    what_is_the_user_looking_for: str | None = Field(
+    what_is_the_user_looking_for: list[str] | None = Field(
         default=None,
-        description="What the user is looking for.",
+        description="A list of preferences, goals or requirements the user is mentioning in the conversation.",
     )
 
     @property
