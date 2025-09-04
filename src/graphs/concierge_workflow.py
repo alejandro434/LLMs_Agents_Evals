@@ -8,6 +8,7 @@ import uuid
 from pprint import pprint
 from typing import Literal
 
+from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.types import Command, interrupt
@@ -15,6 +16,7 @@ from pydantic import Field
 
 from src.graphs.followup_node.nodes_logic import followup_node
 from src.graphs.followup_node.schemas import FollowupSubgraphState
+from src.graphs.qualifier.lgraph_builder import subgraph as qualify_user_subgraph
 from src.graphs.ReAct_subgraph.lgraph_builder import (
     graph_with_in_memory_checkpointer as react_subgraph,
 )
@@ -41,6 +43,50 @@ class ConciergeGraphState(MessagesState):
     final_answer: str | None = Field(default=None)
     # Add field to capture interrupt responses from the receptionist
     direct_response_to_the_user: str | None = Field(default=None)
+    user_state_zip_and_age: str | None = Field(default=None)
+
+
+async def qualify_user(
+    state: ConciergeGraphState,
+) -> Command[Literal["qualify_user"]]:
+    """Qualify user."""
+    response = await qualify_user_subgraph.ainvoke({"messages": state["messages"]})
+    if not response.get("is_user_qualified"):
+        # Avoid nested lists or non-dict updates; pass the messages list directly
+        resp_messages = response.get("messages")
+        messages_update = (
+            resp_messages
+            if isinstance(resp_messages, list)
+            else ([resp_messages] if resp_messages is not None else [])
+        )
+        return Command(
+            goto=END,
+            update={
+                "messages": [
+                    AIMessage(
+                        content=response.get(
+                            "direct_response_to_the_user",
+                            f"{type(response.get('direct_response_to_the_user'))}",
+                        )
+                    )
+                ]
+            },
+        )
+
+    # Store as a plain string to keep state simple and avoid BaseMessage nesting
+    user_state_zip_and_age = (
+        f"The user's state, zip code, and age are: "
+        f"{response.get('collected_user_info')}"
+    )
+    entering_message = "You qualifed as an user!"
+
+    return Command(
+        goto="receptor_router",
+        update={
+            "user_state_zip_and_age": user_state_zip_and_age,
+            "messages": [AIMessage(content=entering_message)],
+        },
+    )
 
 
 async def receptor_router(
@@ -60,9 +106,11 @@ async def receptor_router(
     else:
         config = {"configurable": {"thread_id": "receptionist_default"}}
 
-    response = await receptor_router_subgraph.ainvoke(
-        {"messages": state["messages"]}, config
-    )
+    # Build messages list and append user_state_zip_and_age if present
+    _msgs = list(state["messages"]) if isinstance(state.get("messages"), list) else []
+    if isinstance(state.get("user_state_zip_and_age"), str):
+        _msgs.append(state["user_state_zip_and_age"])
+    response = await receptor_router_subgraph.ainvoke({"messages": _msgs}, config)
 
     # Extract fields from the response, which may be partial if interrupted
     pprint(f"receptor_router response: {response}")
@@ -84,6 +132,7 @@ async def receptor_router(
                 "rationale_of_the_handoff": rationale_of_the_handoff,
                 "selected_agent": selected_agent,
                 "direct_response_to_the_user": direct_response,
+                "messages": [AIMessage(content=direct_response)],
             },
         )
 
@@ -103,6 +152,7 @@ async def receptor_router(
             "task": user_request.task if user_request else None,
             "rationale_of_the_handoff": rationale_of_the_handoff,
             "selected_agent": selected_agent,
+            "messages": [AIMessage(content=f"Transferring to {selected_agent}.")],
         },
     )
 
@@ -158,6 +208,7 @@ async def react(state: ConciergeGraphState) -> Command[Literal["ask_if_continue"
         goto="ask_if_continue",
         update={
             "final_answer": response.get("final_answer"),
+            "messages": [AIMessage(content=response.get("final_answer").content)],
         },
     )
 
@@ -176,7 +227,9 @@ async def ask_if_continue(
         )
     return Command(
         goto=END,
-        update={"messages": [response_to_follow_up]},
+        update={
+            "messages": [AIMessage(content="okey, i'll be here to help you later")]
+        },
     )
 
 
@@ -184,34 +237,47 @@ async def follow_up(
     state: ConciergeGraphState,
 ) -> Command[Literal["receptor_router", END]]:
     """Follow up node."""
-    response = await followup_node(
-        FollowupSubgraphState(messages=state["messages"][-1])
-    )
+    # Ensure we pass a list to MessagesState
+    last_msg = state["messages"][-1] if state.get("messages") else ""
+    response = await followup_node(FollowupSubgraphState(messages=[last_msg]))
     if not response.next_agent:
-        return Command(
-            goto=END,
-            update={
-                "messages": [response.direct_response_to_the_user],
-            },
+        direct = response.direct_response_to_the_user
+        msgs = (
+            [AIMessage(content=direct)]
+            if isinstance(direct, str) and direct.strip() != ""
+            else []
         )
+        return Command(goto=END, update={"messages": msgs})
     guidance_for_distil_user_needs = f"""
     The user has provided the following information:
     {response.what_is_the_user_looking_for}
     The suggested next agent is: {response.next_agent}
     Please distil the user's needs and handoff to the appropriate agent.
     """
+    direct = response.direct_response_to_the_user
+    msgs = (
+        [AIMessage(content=direct)]
+        if isinstance(direct, str) and direct.strip() != ""
+        else []
+    )
+    # Map list of needs to a concise task string
+    needs_list = response.what_is_the_user_looking_for or []
+    if isinstance(needs_list, list):
+        task_text = "; ".join(str(item) for item in needs_list if str(item).strip())
+    else:
+        task_text = str(needs_list)
     return Command(
         goto="receptor_router",
         update={
-            "messages": [response.direct_response_to_the_user],
+            "messages": msgs,
             "rationale_of_the_handoff": guidance_for_distil_user_needs,
-            "user_request": response.what_is_the_user_looking_for,
+            "task": task_text if task_text else None,
         },
     )
 
 
 builder = StateGraph(ConciergeGraphState)
-
+builder.add_node("qualify_user", qualify_user)
 builder.add_node("receptor_router", receptor_router)
 builder.add_node("ask_if_continue", ask_if_continue)
 builder.add_node("follow_up", follow_up)
@@ -221,7 +287,8 @@ builder.add_node("Events", react)
 builder.add_node("CareerCoach", react)
 builder.add_node("Entrepreneur", react)
 
-builder.add_edge(START, "receptor_router")
+builder.add_edge(START, "qualify_user")
+builder.add_edge("qualify_user", "receptor_router")
 graph_with_in_memory_checkpointer = builder.compile(checkpointer=MemorySaver())
 graph = builder.compile()
 
@@ -238,10 +305,14 @@ if __name__ == "__main__":
 
         test_input_1 = {
             "messages": [
-                "Hi, I'm John Smith. I'm looking for a job. My zip code is 20850, I'm looking for a job in Virginia. I'm unemployed."
+                "Hi, I'm John Smith im 20 years old. I'm looking for a job and my zip code is 20850, I'm looking for a job in Virginia. I'm unemployed."
             ]
         }
-        test_input_2 = {"messages": ["Yes"]}
+        test_input_2 = {
+            "messages": [
+                "Hi, I'm John Smith im 20 years old. I'm looking for a job and my zip code is 20850, I'm looking for a job in Virginia. I'm unemployed."
+            ]
+        }
         _ = await graph_with_in_memory_checkpointer.ainvoke(
             test_input_1, config, debug=True
         )

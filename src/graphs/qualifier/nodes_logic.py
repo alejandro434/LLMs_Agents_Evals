@@ -8,7 +8,7 @@ uv run -m src.graphs.qualifier.nodes_logic
 from typing import Literal
 
 from langgraph.graph import END
-from langgraph.types import Command
+from langgraph.types import Command, interrupt
 
 from src.graphs.qualifier.chains import qualifier_chain, user_info_collection_chain
 from src.graphs.qualifier.schemas import (
@@ -64,8 +64,11 @@ async def collect_user_info(
     # If age or zip code is missing, ask for it
     if response.age is None or response.zip_code is None:
         update_payload["messages"] = [response.direct_response_to_the_user]
+        user_resp_to_interrupt = interrupt(response.direct_response_to_the_user)
 
-        return Command(goto=END, update=update_payload)
+        return Command(
+            goto="collect_user_info", update={"messages": [user_resp_to_interrupt]}
+        )
 
     return Command(goto="qualify_user", update=update_payload)
 
