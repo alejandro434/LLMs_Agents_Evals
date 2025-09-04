@@ -1,70 +1,144 @@
 suggest_relevant_tools_examples:
-  - input: Find job fairs events in the next 30 days in the state of Maryland
-    output:
-      Guide on which tools may be useful: >
-        I'll help you find upcoming job fairs in Maryland! Let me search for:
-        1. "Maryland job fairs January 2024" to find specific events
-        2. "Baltimore Washington DC job fairs next 30 days" for regional opportunities
-        3. "Maryland virtual job fairs 2024" for online options
+  - input: Search entry-level software developer jobs in Virginia
+  - output: |
+      Variations of the user's request:
+        - "Find junior software engineering roles in Virginia."
+        - "Entry-level developer positions available in VA."
+        - "Virginia software jobs for recent graduates."
+        - "First-year software engineer openings in Virginia."
+        - "Junior SWE opportunities across VA."
 
-        I'll also check major job boards like Indeed, Monster, and Maryland Workforce Exchange
-        for their event calendars. This will give you a comprehensive list of opportunities.
+  - input: Find nursing jobs hiring in Maryland this month
+  - output: |
+      Variations of the user's request:
+        - "Maryland RN openings hiring now."
+        - "Nursing positions available in MD this month."
+        - "Search nurse jobs across Maryland."
+        - "MD nursing roles with current openings."
+        - "Hospitals hiring nurses in Maryland right now."
 
-        Resources (Google Search):
-        {RESOURCES_IN_GOOGLE_SEARCH}
+  - input: Look for internships for computer science students in Maryland
+  - output: |
+      Variations of the user's request:
+        - "Computer science internships in MD."
+        - "Maryland CS internship opportunities."
+        - "Entry internships for CS students across Maryland."
+        - "Find tech internships in Maryland."
+        - "MD internships for computer science undergrads."
 
-  - input: Find remote junior developer positions available
-    output:
-      Guide on which tools may be useful: >
-        Great! I'll search for remote junior developer opportunities for you:
-        1. "remote junior developer jobs hiring now 2024" for current openings
-        2. "entry level software engineer remote positions" for broader results
-        3. "companies hiring bootcamp graduates remote" if you're a recent grad
+  - input: Search remote jobs available to Virginia residents
+  - output: |
+      Variations of the user's request:
+        - "Remote positions open to candidates living in Virginia."
+        - "Work-from-home jobs that hire in VA."
+        - "Find fully remote roles for Virginia residents."
+        - "Remote-friendly jobs accepting applicants from Virginia."
+        - "VA-based candidates eligible for remote jobs."
 
-        I'll check AngelList, RemoteOK, We Work Remotely, and FlexJobs for the best remote-first companies.
-        Also searching for companies known for hiring juniors like Shopify, GitLab, and Automattic.
+  - input: Find state government jobs in Maryland
+  - output: |
+      Variations of the user's request:
+        - "Maryland state government openings."
+        - "MD state jobs currently hiring."
+        - "Search Maryland public sector roles."
+        - "State of Maryland employment opportunities."
+        - "Civil service jobs in MD."
 
-        Resources (Google Search):
-        {RESOURCES_IN_GOOGLE_SEARCH}
+  - input: Find healthcare jobs near Baltimore, Maryland
+  - output: |
+      Variations of the user's request:
+        - "Healthcare openings around Baltimore, MD."
+        - "Search medical jobs in the Baltimore area."
+        - "Baltimore healthcare roles hiring now."
+        - "Clinical positions near Baltimore, Maryland."
+        - "Medical jobs around the Baltimore metro."
 
-  - input: What companies are hiring new grads for software roles
-    output:
-      Guide on which tools may be useful: >
-        I'll find companies actively recruiting new grads! Searching for:
-        1. "new grad software engineer programs 2024" for structured programs
-        2. "companies hiring entry level developers no experience" for broader opportunities
-        3. "tech companies university recruiting 2024" for campus hire programs
+  - input: Find cybersecurity roles in Northern Virginia
+  - output: |
+      Variations of the user's request:
+        - "Cybersecurity jobs in NoVA."
+        - "Information security positions in Northern Virginia."
+        - "NoVA cyber roles currently hiring."
+        - "Security analyst/engineer jobs in Northern Virginia."
+        - "Cyber roles near Arlington/Alexandria, VA."
 
-        I'll look for rotational programs at Microsoft, Google, Amazon, Meta, and also check
-        growing companies like Stripe, Databricks, and Roblox that have strong new grad pipelines.
+  - input: Search warehouse jobs in Prince George's County, Maryland
+  - output: |
+      Variations of the user's request:
+        - "Warehouse associate positions in PG County, MD."
+        - "Logistics/warehouse roles in Prince George's County."
+        - "Find warehouse jobs across PG County, Maryland."
+        - "MD Prince George's County distribution center jobs."
+        - "PG County warehouse openings hiring now."
 
-        Resources (Google Search):
-        {RESOURCES_IN_GOOGLE_SEARCH}
+  - input: Search IT support jobs in Fairfax County, Virginia
+  - output: |
+      Variations of the user's request:
+        - "Help desk roles in Fairfax County, VA."
+        - "IT support specialist openings in Fairfax County."
+        - "Virginia Fairfax County desktop support jobs."
+        - "Find technical support roles in Fairfax County."
+        - "Tier 1/2 IT support jobs in Fairfax, VA."
 
-  - input: What project manager jobs are out there that don't require tons of experience
-    output:
-      Guide on which tools may be useful: >
-        Let me search for entry-level and transitional PM roles perfect for career changers:
-        1. "entry level project manager jobs no experience required" for accessible roles
-        2. "associate project manager positions hiring" for junior PM opportunities
-        3. "project coordinator to project manager career path" for stepping-stone roles
+  - input: Find career networking events in Maryland in the next month
+  - output: |
+      Variations of the user's request:
+        - "Career networking meetups in MD coming up this month."
+        - "Maryland professional networking events next 30 days."
+        - "MD job seeker networking events this month."
+        - "Upcoming Maryland networking events for careers."
+        - "Maryland career meetups scheduled in the next month."
 
-        I'll focus on companies known for training like Accenture, Deloitte, Capital One,
-        and tech companies with good onboarding programs. Also checking remote options!
+  - input: Find apprenticeship programs in Maryland
+  - output: |
+      Variations of the user's request:
+        - "Maryland apprenticeship opportunities."
+        - "Apprentice programs available in MD."
+        - "MD registered apprenticeships to apply for."
+        - "Search apprenticeships across Maryland."
+        - "Skilled trade apprenticeships in Maryland."
 
-        Resources (Google Search):
-        {RESOURCES_IN_GOOGLE_SEARCH}
+  - input: Search part-time jobs for students in Virginia
+  - output: |
+      Variations of the user's request:
+        - "Part-time roles in VA suitable for students."
+        - "Student-friendly jobs across Virginia."
+        - "Virginia part-time work for college students."
+        - "After-class part-time jobs in Virginia."
+        - "Find part-time student jobs in VA."
 
-  - input: Which companies offer good training programs for career changers
-    output:
-      Guide on which tools may be useful: >
-        I'll find companies with excellent career transition programs:
-        1. "companies with career change training programs 2024" for dedicated programs
-        2. "best companies for career switchers tech" for tech transitions
-        3. "corporate training programs entry level hiring" for structured learning paths
+  - input: Find remote-friendly data analyst jobs in Maryland
+  - output: |
+      Variations of the user's request:
+        - "Remote or hybrid data analyst roles in MD."
+        - "Maryland data analysis jobs allowing remote work."
+        - "MD data analyst positions with remote options."
+        - "Find data analytics roles in Maryland (remote-eligible)."
+        - "Data analyst jobs in MD that are remote-friendly."
 
-        Looking at companies like Google Career Certificates partners, Amazon Career Choice,
-        Microsoft LEAP, and consulting firms with strong training cultures.
+  - input: Find job fairs happening in Virginia this month
+  - output: |
+      Variations of the user's request:
+        - "Upcoming Virginia career fairs this month."
+        - "VA job fairs scheduled over the next month."
+        - "Virginia employment fairs happening soon."
+        - "List job fairs around Virginia this month."
+        - "Career fairs in VA coming up shortly."
 
-        Resources (Google Search):
-        {RESOURCES_IN_GOOGLE_SEARCH}
+  - input: Search employers hiring veterans in Virginia
+  - output: |
+      Variations of the user's request:
+        - "Veteran-friendly employers hiring now in VA."
+        - "Virginia companies recruiting military veterans."
+        - "Find jobs for veterans across Virginia."
+        - "VA employers with veteran hiring programs."
+        - "Roles targeting veterans in Virginia."
+
+  - input: Search seasonal retail jobs in the Virginia Beach area
+  - output: |
+      Variations of the user's request:
+        - "Virginia Beach seasonal retail openings."
+        - "Temporary retail jobs around Virginia Beach, VA."
+        - "Seasonal sales associate roles in Virginia Beach."
+        - "Find holiday retail jobs near Virginia Beach."
+        - "Retail seasonal positions in the Virginia Beach area."

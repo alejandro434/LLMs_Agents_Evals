@@ -20,12 +20,14 @@ from src.graphs.ReAct_subgraph.schemas import (
     ReActResponse,
     SuggestedRelevantToolsOutputSchema,
 )
-from src.graphs.ReAct_subgraph.tools.websearch import websearch_tool
+from src.graphs.ReAct_subgraph.tools.qdrant_hybrid_search import (
+    qdrant_hybrid_search_tool,
+)
 
 
 _BASE_DIR = Path(__file__).parent
 
-tool_list = [websearch_tool]
+tool_list = [qdrant_hybrid_search_tool]
 
 
 def _load_system_prompt(relative_file: str, key: str) -> str:
@@ -84,22 +86,38 @@ if __name__ == "__main__":
     # Simple demonstration / test
 
     tools_advisor_chain = get_tools_advisor_chain()
-    TEST_INPUT = HumanMessage(
-        content="Find in the web job fairs events in the next 30 days."
+    TEST_INPUT_TEXT = "Find software engineer jobs in Virginia."
+    advisor_output = tools_advisor_chain.invoke(
+        {
+            "input": TEST_INPUT_TEXT,
+            "runtime_context_injection": (
+                "AVAILABLE tools names and tools descriptions are:\n"
+                + "\n".join(
+                    [
+                        f"Name: {tool.name}, Description: {tool.description}"
+                        for tool in tool_list
+                    ]
+                )
+            ),
+        }
     )
-    suggested_tools = tools_advisor_chain.invoke(
-        {"messages": [TEST_INPUT]},
-        runtime_context_injection=f"""
-        AVAILABLE tools names and tools descriptions are:
-        {"\n".join([f"Name: {tool.name}, Description: {tool.description}" for tool in tool_list])}
-        """,
-    )
-    print("Tools advisor response:", suggested_tools)
+    print("Tools advisor response (query):", advisor_output.job_search_query)
+    print("Tools advisor reasoning:", advisor_output.job_search_query_reasoning)
 
-    REACT_INPUT = f"""
-    The task you have to execute is: {TEST_INPUT.content}
-    The suggested tools are: {suggested_tools.suggested_tools}
-    The reasoning for why these tools are relevant is: {suggested_tools.tools_advisor_reasoning}
-    """
-    react_response = react_chain.invoke({"messages": [REACT_INPUT]})
-    print("ReAct response:", react_response["structured_response"].final_answer)
+    REACT_INPUT = (
+        "The task you have to execute is: "
+        f"{advisor_output.job_search_query}\n"
+        "The reasoning for why this query is suitable for a job search is: "
+        f"{advisor_output.job_search_query_reasoning}\n"
+        "AVAILABLE tools names and tools descriptions for jobs search are:\n"
+        + "\n".join(
+            [
+                f"Name: {tool.name}, Description: {tool.description}"
+                for tool in tool_list
+            ]
+        )
+    )
+    react_response = react_chain.invoke(
+        {"messages": [HumanMessage(content=REACT_INPUT)]}
+    )
+    print(f"{react_response['messages'][-1].content}")

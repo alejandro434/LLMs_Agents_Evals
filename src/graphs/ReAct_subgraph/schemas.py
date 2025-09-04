@@ -1,3 +1,9 @@
+"""Schema definitions for the ReAct subgraph.
+
+uv run -m src.graphs.ReAct_subgraph.schemas
+"""
+
+# %%
 from langgraph.graph import MessagesState
 from pydantic import BaseModel, Field
 
@@ -10,9 +16,14 @@ from src.graphs.receptionist_subgraph.schemas import (
 class SuggestedRelevantToolsOutputSchema(BaseModel):
     """Suggest relevant tools output schema."""
 
-    suggested_tools: list[str] = Field(description="The tools that may be useful")
-    tools_advisor_reasoning: str = Field(
-        description="Brief, precise and concise reasoning for why these tools are relevant"
+    job_search_query: str = Field(
+        description=("The query (a natural language query) suitable for a job search.")
+    )
+    job_search_query_reasoning: str = Field(
+        description=(
+            "Brief, precise and concise reasoning for why this query is "
+            "suitable for a job search."
+        )
     )
 
 
@@ -26,13 +37,16 @@ class ReActSubgraphState(MessagesState):
         default_factory=UserRequestExtractionSchema, description="The user request"
     )
     why_this_agent_can_help: str = Field(
-        default="", description="The reason why you can help the user with the task"
+        default="", description="Why this agent can help the user with the task"
     )
-    suggested_tools: list[str] = Field(
-        description="The tools that may be useful to help the user with the task"
+    job_search_query: list[str] = Field(
+        description=("The query (a natural language query) suitable for a job search.")
     )
-    tools_advisor_reasoning: str = Field(
-        description="Brief, precise and concise reasoning for why suggested tools are relevant"
+    job_search_query_reasoning: str = Field(
+        description=(
+            "Brief, precise and concise reasoning for why this query is "
+            "suitable for a job search."
+        )
     )
     final_answer: str = Field(description="The final result of the task")
 
@@ -41,5 +55,20 @@ class ReActResponse(BaseModel):
     """Response format for the ReAct agent."""
 
     final_answer: str = Field(
-        description="The final answer based on the results you got using the suggested tools"
+        description=(
+            "The final answer based on the results you got using the job search query"
+        )
     )
+
+
+if __name__ == "__main__":
+    # Simple demonstration / test for schemas
+    sample = SuggestedRelevantToolsOutputSchema(
+        job_search_query=[
+            "entry-level software developer jobs Virginia VA junior SWE roles",
+        ],
+        job_search_query_reasoning=(
+            "Targets state and common synonyms to enrich semantic retrieval."
+        ),
+    )
+    print(sample.model_dump_json(indent=2))

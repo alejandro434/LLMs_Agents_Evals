@@ -1,0 +1,27 @@
+suggest_relevant_tools_examples:
+  - input: Find job fairs events in the next 30 days in the state of Maryland
+  - output: |
+      Variations of the user's request:
+        - "Show me job fairs in Maryland for the next month."
+        - "Are there any career events in Maryland in the upcoming 30 days?"
+        - "List of upcoming job fairs in the state of Maryland."
+        - "Maryland job fairs, next 30 days schedule."
+        - "Career fairs in MD, coming up in the next month."
+
+  - input: Collect information on educational programs to get re-inforced on the job in baltimore
+  - output: |
+      Variations of the user's request:
+        - "Find on-the-job training programs in Baltimore."
+        - "What educational programs are available in Baltimore for career reinforcement?"
+        - "Search for job-related educational courses in the Baltimore area."
+        - "Baltimore professional development and training opportunities."
+        - "Information on skill-building programs for my job in Baltimore."
+
+  - input: Find material to help to start an entrepreneurship in baltimore
+  - output: |
+      Variations of the user's request:
+        - "Resources for starting a business in Baltimore."
+        - "How to start a business in Baltimore, guide."
+        - "Baltimore entrepreneurship support and materials."
+        - "Find help for new entrepreneurs in Baltimore."
+        - "What do I need to start a company in Baltimore?"
