@@ -1,0 +1,33 @@
+UserInfoCollectionFewshots:
+  # ZIP-only → infer state
+  - input: "My ZIP is 21201."
+  - output: "UserInfoOutputSchema(age=None, state='Maryland', zip_code='21201')"
+
+  # Age + ZIP → infer state
+  - input: "I'm 20. 22102."
+  - output: "UserInfoOutputSchema(age=20, state='Virginia', zip_code='22102')"
+
+  # Conflicting text vs ZIP → prefer ZIP-derived state
+  - input: "I'm 30, live in California, ZIP 21201."
+  - output: "UserInfoOutputSchema(age=30, state='Maryland', zip_code='21201')"
+
+QualifierFewshots:
+  # Qualified: adult in MD
+  - input: "I'm 25 in Maryland, ZIP 21201."
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Qualified: adult inferred VA from ZIP
+  - input: "I'm 20, ZIP 22102."
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Not qualified: under 18
+  - input: "I'm 17 in Virginia."
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='You must be at least 18 years old to be qualified for this job.')"
+
+  # Not qualified: non-MD/VA state
+  - input: "I'm 30 in California."
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='The job is only available to residents of Maryland and Virginia.')"
+
+  # Conflict: text CA but MD ZIP → prefer ZIP, qualified
+  - input: "I live in CA, ZIP 21201."
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"

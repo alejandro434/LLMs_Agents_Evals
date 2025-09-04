@@ -182,12 +182,14 @@ async def ask_if_continue(
 
 async def follow_up(
     state: ConciergeGraphState,
-) -> Command[Literal["follow_up", "receptor_router"]]:
+) -> Command[Literal["receptor_router", END]]:
     """Follow up node."""
-    response = await followup_node(FollowupSubgraphState(messages=state["messages"]))
+    response = await followup_node(
+        FollowupSubgraphState(messages=state["messages"][-1])
+    )
     if not response.next_agent:
         return Command(
-            goto="follow_up",
+            goto=END,
             update={
                 "messages": [response.direct_response_to_the_user],
             },
@@ -239,14 +241,12 @@ if __name__ == "__main__":
                 "Hi, I'm John Smith. I'm looking for a job. My zip code is 20850, I'm looking for a job in Virginia. I'm unemployed."
             ]
         }
-        # test_input_2 = {
-        #     "messages": ["I also interested in getting a degree in computer science."]
-        # }
+        test_input_2 = {"messages": ["Yes"]}
         _ = await graph_with_in_memory_checkpointer.ainvoke(
             test_input_1, config, debug=True
         )
-        # _ = await graph_with_in_memory_checkpointer.ainvoke(
-        #     test_input_2, config, debug=True
-        # )
+        _ = await graph_with_in_memory_checkpointer.ainvoke(
+            test_input_2, config, debug=True
+        )
 
     asyncio.run(test_in_memory_checkpointer_direct())

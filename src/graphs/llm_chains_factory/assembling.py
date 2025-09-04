@@ -239,7 +239,7 @@ if __name__ == "__main__":
         response: str
 
     # Load receptionist system prompt from YAML
-    with Path("src/graphs/receptionist_subgraph/system_prompt.yml").open(
+    with Path("src/graphs/receptionist_subgraph/prompts/system_prompt.yml").open(
         encoding="utf-8"
     ) as f:
         SYSTEM_PROMPT = yaml.safe_load(f)["SYSTEM_PROMPT_RECEPTIONIST"]

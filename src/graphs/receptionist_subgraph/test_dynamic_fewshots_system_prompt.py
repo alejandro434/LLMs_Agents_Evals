@@ -21,10 +21,12 @@ from src.graphs.receptionist_subgraph.schemas import (
 )
 
 
-fewshots_path = Path(__file__).parent / "fewshots.yml"
-system_prompt_path = Path(__file__).parent / "system_prompt.yml"
-profiling_fewshots_path = Path(__file__).parent / "profiling_fewshots.yml"
-profiling_system_prompt_path = Path(__file__).parent / "profiling_system_prompt.yml"
+fewshots_path = Path(__file__).parent / "prompts" / "fewshots.yml"
+system_prompt_path = Path(__file__).parent / "prompts" / "system_prompt.yml"
+profiling_fewshots_path = Path(__file__).parent / "prompts" / "profiling_fewshots.yml"
+profiling_system_prompt_path = (
+    Path(__file__).parent / "prompts" / "profiling_system_prompt.yml"
+)
 
 with system_prompt_path.open("r", encoding="utf-8") as f:
     system_prompt = yaml.safe_load(f)["SYSTEM_PROMPT_RECEPTIONIST"]

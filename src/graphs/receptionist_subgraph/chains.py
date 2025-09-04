@@ -60,7 +60,7 @@ def get_receptionist_chain(
     """
     try:
         system_prompt = _load_system_prompt(
-            "system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST"
+            "prompts/system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST"
         )
     except (FileNotFoundError, yaml.YAMLError) as e:
         raise RuntimeError(f"Failed to load receptionist system prompt: {e}") from e
@@ -71,7 +71,7 @@ def get_receptionist_chain(
         k=k,
         temperature=temperature,
         postprocess=None,
-        yaml_path=_BASE_DIR / "fewshots.yml",
+        yaml_path=_BASE_DIR / "prompts" / "fewshots.yml",
         current_history=list(current_history) if current_history else None,
         prefer_langsmith=prefer_langsmith,
         dataset_name=dataset_name,
@@ -101,7 +101,8 @@ def get_profiling_chain(
     """
     try:
         system_prompt = _load_system_prompt(
-            "profiling_system_prompt.yml", "SYSTEM_PROMPT_RECEPTIONIST_PROFILING"
+            "prompts/profiling_system_prompt.yml",
+            "SYSTEM_PROMPT_RECEPTIONIST_PROFILING",
         )
     except (FileNotFoundError, yaml.YAMLError) as e:
         raise RuntimeError(f"Failed to load profiling system prompt: {e}") from e
@@ -113,7 +114,7 @@ def get_profiling_chain(
         temperature=temperature,
         postprocess=None,
         group="Profiling_examples",
-        yaml_path=_BASE_DIR / "profiling_fewshots.yml",
+        yaml_path=_BASE_DIR / "prompts" / "profiling_fewshots.yml",
     )
 
 
@@ -125,7 +126,7 @@ def get_user_request_extraction_chain(
     """Construct the user request extraction chain."""
     try:
         system_prompt = _load_system_prompt(
-            "user_request_extraction_system_prompt.yml",
+            "prompts/user_request_extraction_system_prompt.yml",
             "SYSTEM_PROMPT_RECEPTIONIST_USER_REQUEST_EXTRACTION",
         )
     except (FileNotFoundError, yaml.YAMLError) as e:
@@ -138,7 +139,7 @@ def get_user_request_extraction_chain(
         temperature=temperature,
         postprocess=None,
         group="User_request_extraction_examples",
-        yaml_path=_BASE_DIR / "user_request_extraction_fewshots.yml",
+        yaml_path=_BASE_DIR / "prompts" / "user_request_extraction_fewshots.yml",
     )
 
 
@@ -157,7 +158,7 @@ def get_agent_selection_chain(
     """Construct the agent selection chain."""
     try:
         system_prompt = _load_system_prompt(
-            "agent_selection_system_prompt.yml",
+            "prompts/agent_selection_system_prompt.yml",
             "SYSTEM_PROMPT_RECEPTIONIST_AGENT_SELECTION",
         )
     except (FileNotFoundError, yaml.YAMLError) as e:
@@ -170,7 +171,7 @@ def get_agent_selection_chain(
         temperature=temperature,
         postprocess=None,
         group="Agent_selection_examples",
-        yaml_path=_BASE_DIR / "agent_selection_fewshots.yml",
+        yaml_path=_BASE_DIR / "prompts" / "agent_selection_fewshots.yml",
     )
 
 

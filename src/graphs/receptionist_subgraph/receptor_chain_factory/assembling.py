@@ -216,7 +216,7 @@ if __name__ == "__main__":
         query: str
         response: str
 
-    with Path("src/graphs/receptionist_subgraph/system_prompt.yml").open(
+    with Path("src/graphs/receptionist_subgraph/prompts/system_prompt.yml").open(
         encoding="utf-8"
     ) as f:
         SYSTEM_PROMPT = yaml.safe_load(f)["SYSTEM_PROMPT_RECEPTIONIST"]
@@ -232,7 +232,7 @@ if __name__ == "__main__":
         output_schema=TestOutputSchema,
         k=5,
         temperature=0,
-        yaml_path=Path(__file__).resolve().parents[1] / "fewshots.yml",
+        yaml_path=Path(__file__).resolve().parents[1] / "prompts" / "fewshots.yml",
         current_history=CURRENT_HISTORY,
     )
 

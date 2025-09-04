@@ -1,7 +1,7 @@
 """Receptionist dynamic few-shots builder using concierge fewshots.yml.
 
 This mirrors the API of `src/graphs/llm_chains_factory/dynamic_fewshots.py`,
-but sources examples from `src/graphs/receptionist_subgraph/fewshots.yml`.
+but sources examples from `src/graphs/receptionist_subgraph/prompts/fewshots.yml`.
 uv run src/graphs/receptionist_subgraph/receptor_chain_factory/dynamic_fewshots.py
 """
 
@@ -46,7 +46,7 @@ except Exception:  # pragma: no cover - fallback for direct script execution
     )
 
 
-DEFAULT_FEWSHOTS_PATH = Path(__file__).resolve().parents[1] / "fewshots.yml"
+DEFAULT_FEWSHOTS_PATH = Path(__file__).resolve().parents[1] / "prompts" / "fewshots.yml"
 load_dotenv(override=True)
 
 

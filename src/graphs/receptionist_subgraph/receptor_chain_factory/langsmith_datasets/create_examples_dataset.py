@@ -1,6 +1,6 @@
 """Create a LangSmith dataset from concierge few-shot YAML examples.
 
-This script reads `src/graphs/receptionist_subgraph/fewshots.yml`, converts
+This script reads `src/graphs/receptionist_subgraph/prompts/fewshots.yml`, converts
 the concierge examples into LangSmith dataset examples, and uploads them using
 the LangSmith Python SDK.
 
@@ -28,7 +28,10 @@ from langsmith import Client
 load_dotenv(override=True)
 
 FEWSHOTS_YAML_PATH = (
-    Path(__file__).resolve().parents[3] / "receptionist_subgraph" / "fewshots.yml"
+    Path(__file__).resolve().parents[3]
+    / "receptionist_subgraph"
+    / "prompts"
+    / "fewshots.yml"
 )
 
 
@@ -197,9 +200,7 @@ def create_langsmith_examples(
 def main(dataset_name: str | None = None) -> None:
     """Create a LangSmith dataset from the concierge few-shot examples."""
     name = dataset_name or "concierge-examples"
-    description = (
-        "Few-shot concierge examples extracted from receptionist_subgraph/fewshots.yml"
-    )
+    description = "Few-shot concierge examples extracted from receptionist_subgraph/prompts/fewshots.yml"
 
     data = load_yaml(FEWSHOTS_YAML_PATH)
     transformed = extract_examples(data)
