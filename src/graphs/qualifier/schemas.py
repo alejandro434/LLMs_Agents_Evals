@@ -32,16 +32,16 @@ class UserInfoOutputSchema(BaseModel):
         description=(
             "The U.S. state where the user is located. If a ZIP code is"
             " provided, infer the state from the ZIP and prefer it over any"
-            " conflicting textual state. ONLY states of Maryland and Virginia"
-            " are qualified."
+            " conflicting textual state. ONLY residents of Maryland, Virginia,"
+            " and Washington D.C. are qualified."
         ),
     )
     zip_code: str | None = Field(
         default=None,
         description=(
             "The US ZIP code of the user. If present, use it to infer the"
-            " state. ONLY residents of Maryland and Virginia are qualified"
-            " for the job."
+            " state. ONLY residents of Maryland, Virginia, and Washington D.C."
+            " are qualified for the job."
         ),
     )
     direct_response_to_the_user: str | None = Field(

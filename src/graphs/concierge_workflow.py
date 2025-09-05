@@ -17,6 +17,7 @@ from pydantic import Field
 from src.graphs.followup_node.nodes_logic import followup_node
 from src.graphs.followup_node.schemas import FollowupSubgraphState
 from src.graphs.qualifier.lgraph_builder import subgraph as qualify_user_subgraph
+from src.graphs.qualifier.schemas import UserInfoOutputSchema
 from src.graphs.ReAct_subgraph.lgraph_builder import (
     graph_with_in_memory_checkpointer as react_subgraph,
 )
@@ -48,45 +49,40 @@ class ConciergeGraphState(MessagesState):
 
 async def qualify_user(
     state: ConciergeGraphState,
-) -> Command[Literal["qualify_user"]]:
+) -> Command[Literal[END, "receptor_router"]]:
     """Qualify user."""
     response = await qualify_user_subgraph.ainvoke({"messages": state["messages"]})
-    if not response.get("is_user_qualified"):
-        # Avoid nested lists or non-dict updates; pass the messages list directly
-        resp_messages = response.get("messages")
-        messages_update = (
-            resp_messages
-            if isinstance(resp_messages, list)
-            else ([resp_messages] if resp_messages is not None else [])
-        )
+    if isinstance(response.get("is_user_qualified"), bool):
+        if response.get("is_user_qualified"):
+            if (
+                response.get("collected_user_info")
+                and isinstance(
+                    response.get("collected_user_info"), UserInfoOutputSchema
+                )
+                and response.get("collected_user_info").zip_code is not None
+                and response.get("collected_user_info").age is not None
+            ):
+                user_state_zip_and_age = (
+                    f"The user's state, zip code, and age are: "
+                    f"{response.get('collected_user_info')}"
+                )
+                entering_message = "You qualifed as an user!"
+
+                return Command(
+                    goto="receptor_router",
+                    update={
+                        "user_state_zip_and_age": user_state_zip_and_age,
+                        "messages": [AIMessage(content=entering_message)],
+                    },
+                )
+            return Command(
+                goto=END, update={"messages": ["FAILED TO COLLECT USER INFO!"]}
+            )
         return Command(
             goto=END,
-            update={
-                "messages": [
-                    AIMessage(
-                        content=response.get(
-                            "direct_response_to_the_user",
-                            f"{type(response.get('direct_response_to_the_user'))}",
-                        )
-                    )
-                ]
-            },
+            update={"messages": [response.get("why_not_qualified")]},
         )
-
-    # Store as a plain string to keep state simple and avoid BaseMessage nesting
-    user_state_zip_and_age = (
-        f"The user's state, zip code, and age are: "
-        f"{response.get('collected_user_info')}"
-    )
-    entering_message = "You qualifed as an user!"
-
-    return Command(
-        goto="receptor_router",
-        update={
-            "user_state_zip_and_age": user_state_zip_and_age,
-            "messages": [AIMessage(content=entering_message)],
-        },
-    )
+    return Command(goto=END, update={"messages": ["FAILED TO QUALIFY USER!"]})
 
 
 async def receptor_router(
@@ -297,10 +293,17 @@ if __name__ == "__main__":
 
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
-    async def test_in_memory_checkpointer_direct() -> None:
-        """Test the graph_with_in_memory_checkpointer directly."""
+    async def test_not_qualified_users() -> None:
+        """Test the graph_with_in_memory_checkpointer directly with not qualified users.
+
+        The main goal is to check that the graph is ENDING when the user is not qualified.
+        When the graph ends, the graph always should show the reason why the user is not qualified.
+        This reason should be a IAmMessage.
+        This has to be the only message returned by the graph.
+
+        """
         print("\n" + "=" * 70)
-        print("TESTING IN-MEMORY CHECKPOINTER with ainvoke")
+        print("TESTING CASES WHERE THE USER IS NOT QUALIFIED")
         print("=" * 70)
 
         test_input_1 = {
@@ -308,16 +311,9 @@ if __name__ == "__main__":
                 "Hi, I'm John Smith im 20 years old. I'm looking for a job and my zip code is 20850, I'm looking for a job in Virginia. I'm unemployed."
             ]
         }
-        test_input_2 = {
-            "messages": [
-                "Hi, I'm John Smith im 20 years old. I'm looking for a job and my zip code is 20850, I'm looking for a job in Virginia. I'm unemployed."
-            ]
-        }
+
         _ = await graph_with_in_memory_checkpointer.ainvoke(
             test_input_1, config, debug=True
         )
-        _ = await graph_with_in_memory_checkpointer.ainvoke(
-            test_input_2, config, debug=True
-        )
 
-    asyncio.run(test_in_memory_checkpointer_direct())
+    asyncio.run(test_not_qualified_users())

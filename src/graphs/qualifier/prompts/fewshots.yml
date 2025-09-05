@@ -1,17 +1,94 @@
 UserInfoCollectionFewshots:
+  # === Basic ZIP-only cases ===
   # ZIP-only → infer state
   - input: "My ZIP is 21201."
   - output: "UserInfoOutputSchema(age=None, state='Maryland', zip_code='21201')"
 
+  # ZIP with different format (ZIP+4)
+  - input: "ZIP: 22102-1234"
+  - output: "UserInfoOutputSchema(age=None, state='Virginia', zip_code='22102-1234')"
+
+  # === Age + ZIP combinations ===
   # Age + ZIP → infer state
   - input: "I'm 20. 22102."
   - output: "UserInfoOutputSchema(age=20, state='Virginia', zip_code='22102')"
 
+  # Age mentioned after ZIP
+  - input: "ZIP 20001, I'm 35 years old"
+  - output: "UserInfoOutputSchema(age=35, state='District of Columbia', zip_code='20001')"
+
+  # === D.C. specific cases ===
+  # D.C. ZIP first range
+  - input: "I'm 22, ZIP 20001."
+  - output: "UserInfoOutputSchema(age=22, state='District of Columbia', zip_code='20001')"
+
+  # D.C. ZIP second range
+  - input: "Age 28, zip code 20500"
+  - output: "UserInfoOutputSchema(age=28, state='District of Columbia', zip_code='20500')"
+
+  # === Conflicting state mentions ===
   # Conflicting text vs ZIP → prefer ZIP-derived state
   - input: "I'm 30, live in California, ZIP 21201."
   - output: "UserInfoOutputSchema(age=30, state='Maryland', zip_code='21201')"
 
+  # Text says NY but VA ZIP
+  - input: "I'm from New York but my ZIP is 22102"
+  - output: "UserInfoOutputSchema(age=None, state='Virginia', zip_code='22102')"
+
+  # Text says TX but D.C. ZIP
+  - input: "Living in Texas, 45 years old, 20250"
+  - output: "UserInfoOutputSchema(age=45, state='District of Columbia', zip_code='20250')"
+
+  # === Edge cases with partial info ===
+  # Only age provided
+  - input: "I am 19 years old"
+  - output: "UserInfoOutputSchema(age=19, state=None, zip_code=None)"
+
+  # Only state mentioned (no ZIP to override)
+  - input: "I live in Maryland"
+  - output: "UserInfoOutputSchema(age=None, state='Maryland', zip_code=None)"
+
+  # === Boundary ZIP codes ===
+  # MD boundary start
+  - input: "20600 is my zip"
+  - output: "UserInfoOutputSchema(age=None, state='Maryland', zip_code='20600')"
+
+  # VA Northern boundary
+  - input: "I'm 30, ZIP 20100"
+  - output: "UserInfoOutputSchema(age=30, state='Virginia', zip_code='20100')"
+
+  # VA Southern range
+  - input: "Age 25, location 24699"
+  - output: "UserInfoOutputSchema(age=25, state='Virginia', zip_code='24699')"
+
+  # === Various input formats ===
+  # Conversational style
+  - input: "Well, I just turned 18 and I'm in zip code 21999"
+  - output: "UserInfoOutputSchema(age=18, state='Maryland', zip_code='21999')"
+
+  # Numbers in text
+  - input: "I have 2 kids, I'm 35, and live in 20001"
+  - output: "UserInfoOutputSchema(age=35, state='District of Columbia', zip_code='20001')"
+
+  # === Non-qualifying states ===
+  # California ZIP
+  - input: "I'm 40, ZIP 90210"
+  - output: "UserInfoOutputSchema(age=40, state='California', zip_code='90210')"
+
+  # New York ZIP
+  - input: "27 years old, 10001"
+  - output: "UserInfoOutputSchema(age=27, state='New York', zip_code='10001')"
+
+  # Texas ZIP
+  - input: "Age 33, ZIP code 75001"
+  - output: "UserInfoOutputSchema(age=33, state='Texas', zip_code='75001')"
+
+  # Unknown ZIP (not in our mapping)
+  - input: "I'm 29, ZIP 55555"
+  - output: "UserInfoOutputSchema(age=29, state=None, zip_code='55555')"
+
 QualifierFewshots:
+  # === Qualified cases ===
   # Qualified: adult in MD
   - input: "I'm 25 in Maryland, ZIP 21201."
   - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
@@ -20,14 +97,104 @@ QualifierFewshots:
   - input: "I'm 20, ZIP 22102."
   - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
 
-  # Not qualified: under 18
-  - input: "I'm 17 in Virginia."
-  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='You must be at least 18 years old to be qualified for this job.')"
+  # Qualified: adult in D.C.
+  - input: "I'm 25 in Washington D.C., ZIP 20001."
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
 
-  # Not qualified: non-MD/VA state
-  - input: "I'm 30 in California."
-  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='The job is only available to residents of Maryland and Virginia.')"
+  # Qualified: exactly 18 in MD
+  - input: "Just turned 18, living in Maryland"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
 
+  # Qualified: D.C. second range
+  - input: "I'm 30, ZIP 20500"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Qualified: elderly in VA
+  - input: "I'm 65 and retired in Virginia, 22000"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # === ZIP override qualifying cases ===
   # Conflict: text CA but MD ZIP → prefer ZIP, qualified
   - input: "I live in CA, ZIP 21201."
   - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Conflict: says TX but D.C. ZIP → qualified
+  - input: "From Texas, 40 years old, but ZIP is 20001"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Conflict: says NY but VA ZIP → qualified
+  - input: "New York resident, age 22, ZIP 22102"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # === Not qualified: Age issues ===
+  # Not qualified: under 18
+  - input: "I'm 17 in Virginia."
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='You must be at least 18 years old')"
+
+  # Not qualified: minor in MD
+  - input: "16 years old, Maryland ZIP 21201"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='You must be at least 18 years old')"
+
+  # Not qualified: baby in D.C.
+  - input: "My child is 5, we live in DC 20001"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='You must be at least 18 years old')"
+
+  # Not qualified: 17 exactly (boundary)
+  - input: "I'll be 18 next month, currently 17, VA"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='You must be at least 18 years old')"
+
+  # === Not qualified: Location issues ===
+  # Not qualified: non-MD/VA/DC state
+  - input: "I'm 30 in California."
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='This position is only available to residents of Maryland, Virginia, or Washington D.C.')"
+
+  # Not qualified: New York adult
+  - input: "25 years old, NYC, ZIP 10001"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='This position is only available to residents of Maryland, Virginia, or Washington D.C.')"
+
+  # Not qualified: Texas adult
+  - input: "Age 45, Houston Texas, 77001"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='This position is only available to residents of Maryland, Virginia, or Washington D.C.')"
+
+  # Not qualified: Unknown ZIP adult
+  - input: "I'm 30, ZIP 99999"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='This position is only available to residents of Maryland, Virginia, or Washington D.C.')"
+
+  # === Not qualified: Both issues ===
+  # Not qualified: minor AND wrong state
+  - input: "I'm 16 in California, 90210"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='You must be at least 18 years old')"
+
+  # Not qualified: 17 in Texas
+  - input: "17 years old, Dallas TX"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='You must be at least 18 years old')"
+
+  # === Edge cases ===
+  # No location info but adult
+  - input: "I'm 25 years old"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='This position is only available to residents of Maryland, Virginia, or Washington D.C.')"
+
+  # No age but valid location
+  - input: "I live in Maryland, ZIP 21201"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='Age information is required to determine qualification')"
+
+  # === Boundary ZIP codes ===
+  # Qualified: MD boundary start
+  - input: "Age 30, ZIP 20600"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Qualified: MD boundary end
+  - input: "I'm 25, 21999"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Qualified: VA northern boundary
+  - input: "22 years old, ZIP 20100"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Qualified: D.C. boundary
+  - input: "Age 40, 20099"
+  - output: "QualifierOutputSchema(qualified=True, why_not_qualified=None)"
+
+  # Not qualified: Just outside D.C. range
+  - input: "I'm 30, ZIP 20000"
+  - output: "QualifierOutputSchema(qualified=False, why_not_qualified='This position is only available to residents of Maryland, Virginia, or Washington D.C.')"
