@@ -199,7 +199,24 @@ async def react(state: ConciergeGraphState) -> Command[Literal[END]]:
 
     pprint(f"{response}")
 
-    return Command(goto=END, update={})
+    # Extract messages from the response
+    tool_message_content = response.get("direct_tool_message", "")
+
+    # Get the final answer which should be the last AIMessage
+    final_answer = response.get("final_answer", "")
+
+    return Command(
+        goto=END,
+        update={
+            "messages": [AIMessage(content=final_answer)]
+            + (
+                [AIMessage(content=tool_message_content)]
+                if tool_message_content
+                else None
+            ),
+            "final_answer": final_answer,
+        },
+    )
 
 
 async def ask_if_continue(

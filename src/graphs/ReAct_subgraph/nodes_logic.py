@@ -139,10 +139,28 @@ async def react_node(state: ReActSubgraphState) -> Command[Literal[END]]:
         config={"recursion_limit": 50},
     )
 
+    # Extract ToolMessage from the response messages
+    from langchain_core.messages import ToolMessage
+
+    messages_from_react = react_response.get("messages", [])
+    direct_tool_message = None
+
+    # Find ToolMessage in the messages
+    for msg in messages_from_react:
+        if isinstance(msg, ToolMessage):
+            direct_tool_message = msg.content
+            break
+
+    # Get the final answer which should be the last message's content
+    final_message_content = (
+        messages_from_react[-1].content if messages_from_react else ""
+    )
+
     return Command(
         goto=END,
         update={
-            "final_answer": str(react_response),
+            "direct_tool_message": direct_tool_message,
+            "messages": final_message_content,
         },
     )
 

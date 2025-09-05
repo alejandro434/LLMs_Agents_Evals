@@ -49,6 +49,10 @@ class ReActSubgraphState(MessagesState):
         )
     )
     final_answer: str = Field(description="The final result of the task")
+    direct_tool_message: str | None = Field(
+        default=None,
+        description="The direct tool message content extracted from the response",
+    )
 
 
 class ReActResponse(BaseModel):
