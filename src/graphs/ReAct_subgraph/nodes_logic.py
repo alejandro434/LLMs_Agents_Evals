@@ -138,11 +138,11 @@ async def react_node(state: ReActSubgraphState) -> Command[Literal[END]]:
         {"messages": [HumanMessage(content=react_input)]},
         config={"recursion_limit": 50},
     )
+
     return Command(
         goto=END,
         update={
-            "final_answer": react_response["messages"][-1],
-            "messages": react_response["messages"][-1],
+            "final_answer": str(react_response),
         },
     )
 
@@ -160,9 +160,9 @@ if __name__ == "__main__":
                 name="John Doe",
                 current_employment_status="employed",
                 zip_code="20850",
-                what_is_the_user_looking_for=(
+                what_is_the_user_looking_for=[
                     "Find software engineer jobs in Virginia"
-                ),
+                ],
             ),
             why_this_agent_can_help=(
                 "I can help the user find software engineer jobs in Virginia."
@@ -183,9 +183,9 @@ if __name__ == "__main__":
                 name="John Doe",
                 current_employment_status="employed",
                 zip_code="20850",
-                what_is_the_user_looking_for=(
+                what_is_the_user_looking_for=[
                     "Find software engineer jobs in Virginia"
-                ),
+                ],
             ),
             why_this_agent_can_help=(
                 "I can help the user find software engineer jobs in Virginia."

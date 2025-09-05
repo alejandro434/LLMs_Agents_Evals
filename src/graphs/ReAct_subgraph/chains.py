@@ -17,7 +17,6 @@ from src.graphs.llm_chains_factory.assembling import (
     build_structured_chain,
 )
 from src.graphs.ReAct_subgraph.schemas import (
-    ReActResponse,
     SuggestedRelevantToolsOutputSchema,
 )
 from src.graphs.ReAct_subgraph.tools.qdrant_hybrid_search import (
@@ -70,15 +69,29 @@ def get_tools_advisor_chain(
 model = init_chat_model("gpt-4.1-mini", temperature=0)
 
 
+from langchain_core.messages import SystemMessage
+
+
+# Create a more explicit system message for the agent
+system_prompt = SystemMessage(
+    content="""You are a helpful job search assistant.
+Given a user's task and profile, you will use the available tools to find relevant job listings.
+
+IMPORTANT: After using the tools to search for jobs, you MUST provide a final answer that:
+1. Summarizes the job search results
+2. Highlights the most relevant positions found
+3. Provides helpful information to the user
+
+Do not end your response with just tool results. Always provide a comprehensive final answer after using the tools."""
+)
+
 react_chain = create_react_agent(
     model=model,
     tools=tool_list,
-    prompt="""
-    Given a user's task, user's profile, why you can help the user, and suggested tools,
-    you have to execute the task using the suggested tools.
-    When you are done, you have to return a final answer to the user.
-    """,
-    response_format=ReActResponse,
+    prompt=system_prompt,
+    # Note: response_format with create_react_agent doesn't work as expected
+    # The agent returns tool messages instead of structured output
+    # response_format=ReActResponse,
 )
 
 

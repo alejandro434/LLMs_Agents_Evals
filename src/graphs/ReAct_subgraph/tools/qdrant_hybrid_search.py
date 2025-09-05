@@ -129,7 +129,7 @@ qdrant_hybrid_search_tool = StructuredTool.from_function(
     ),
     func=query_qdrant_hybrid,
     args_schema=QdrantHybridSearchInput,
-    return_direct=True,
+    return_direct=False,
 )
 
 

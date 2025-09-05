@@ -7,7 +7,7 @@ uv run -m src.graphs.concierge_workflow
 from pprint import pprint
 from typing import Literal
 
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.types import Command, interrupt
@@ -145,19 +145,30 @@ async def receptor_router(
     )
 
 
-async def react(state: ConciergeGraphState) -> Command[Literal["ask_if_continue"]]:
+async def react(state: ConciergeGraphState) -> Command[Literal[END]]:
     """React node."""
     # Use a consistent thread_id for the react subgraph to maintain state
     # Create a stable thread_id based on the conversation
 
-    if not state.get("task"):
-        raise ValueError("React node: task is missing")
-    # Import the schema needed for the user_request
-
-    # Create a UserRequestExtractionSchema object from the task string
-    user_request = UserRequestExtractionSchema(task=state.get("task"))
-
     missing_or_invalid: list[str] = []
+
+    # Check if we have a user_request directly in state (for testing)
+    # or if we need to create one from task
+    if state.get("user_request"):
+        # Direct user_request provided (testing scenario)
+        user_request = state.get("user_request")
+        if not isinstance(user_request, UserRequestExtractionSchema):
+            missing_or_invalid.append(
+                f"React node: user_request has invalid type: {type(user_request).__name__}"
+            )
+    elif state.get("task"):
+        # Create user_request from task (normal flow)
+        user_request = UserRequestExtractionSchema(task=state.get("task"))
+    else:
+        missing_or_invalid.append("React node: task or user_request is missing")
+        user_request = None
+
+    # Validate user_profile
     if not state.get("user_profile"):
         missing_or_invalid.append("React node: user_profile is missing")
     elif not isinstance(state.get("user_profile"), UserProfileSchema):
@@ -165,7 +176,12 @@ async def react(state: ConciergeGraphState) -> Command[Literal["ask_if_continue"
         missing_or_invalid.append(
             f"React node: user_profile has invalid type: {value_type}, expected UserProfileSchema"
         )
-    if not state.get("rationale_of_the_handoff"):
+
+    # Check for rationale_of_the_handoff or why_this_agent_can_help (for testing)
+    rationale = state.get("rationale_of_the_handoff") or state.get(
+        "why_this_agent_can_help"
+    )
+    if not rationale:
         missing_or_invalid.append("React node: rationale_of_the_handoff is missing")
 
     if missing_or_invalid:
@@ -176,23 +192,14 @@ async def react(state: ConciergeGraphState) -> Command[Literal["ask_if_continue"
     _input = {
         "user_request": user_request,
         "user_profile": state.get("user_profile"),
-        "why_this_agent_can_help": state.get("rationale_of_the_handoff"),
+        "why_this_agent_can_help": rationale,
     }
 
     response = await react_subgraph.ainvoke(_input)
-    if (
-        response.get("final_answer")
-        and isinstance(response.get("final_answer"), ToolMessage)
-        and response.get("final_answer").content != ""
-    ):
-        return Command(
-            goto="ask_if_continue",
-            update={
-                "final_answer": response.get("final_answer"),
-                "messages": [AIMessage(content=response.get("final_answer").content)],
-            },
-        )
-    return Command(goto=END, update={"messages": ["FAILED TO GET FINAL ANSWER!"]})
+
+    pprint(f"{response}")
+
+    return Command(goto=END, update={})
 
 
 async def ask_if_continue(
@@ -277,11 +284,31 @@ if __name__ == "__main__":
     import asyncio
     import uuid
 
+    # test react node
+    react_config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    react_input = {
+        "user_request": UserRequestExtractionSchema(
+            task=("Find software engineer jobs in Virginia.")
+        ),
+        "user_profile": UserProfileSchema(
+            name="John Doe",
+            current_employment_status="employed",
+            zip_code="20850",
+            what_is_the_user_looking_for=["Find software engineer jobs in Virginia"],
+        ),
+        "why_this_agent_can_help": "I can help the user find software engineer jobs in Virginia.",
+    }
+
+    async def test_react_node() -> None:
+        """Test the react node."""
+        response = await react(ConciergeGraphState(**react_input))
+        print(f"React response: {response}")
+
+    asyncio.run(test_react_node())
+
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
-    INPUT_MESSAGE_1 = (
-        "i'm 22 years old. zip code is 20001. My name is Alex, and im unemployed."
-    )
-    INPUT_MESSAGE_2 = "My name is Alex, and im unemployed, and i'm looking for a job  as  a software engineer."
+    INPUT_MESSAGE_1 = "i'm 22 years old. zip code is 20147, virginia. My name is Alex, and im unemployed."
+    INPUT_MESSAGE_2 = "My name is Alex, and im unemployed, and i'm looking for a job  as  a software engineer in virginia."
     messages = [INPUT_MESSAGE_1, INPUT_MESSAGE_2]
 
     async def test_concierge_workflow() -> None:

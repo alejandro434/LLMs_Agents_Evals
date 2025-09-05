@@ -47,9 +47,9 @@ if __name__ == "__main__":
                 name="John Doe",
                 current_employment_status="employed",
                 zip_code="20850",
-                what_is_the_user_looking_for=(
+                what_is_the_user_looking_for=[
                     "Find software engineer jobs in Virginia"
-                ),
+                ],
             ),
             "why_this_agent_can_help": (
                 "I can help the user find software engineer jobs in Virginia."
@@ -93,7 +93,9 @@ if __name__ == "__main__":
                     name="Jane Smith",
                     current_employment_status="unemployed",
                     zip_code="20852",
-                    what_is_the_user_looking_for="Find software engineer jobs in Virginia",
+                    what_is_the_user_looking_for=[
+                        "Find software engineer jobs in Virginia"
+                    ],
                 ),
                 "why_this_agent_can_help": (
                     "I can help the user find software engineer jobs in Virginia."
@@ -113,7 +115,9 @@ if __name__ == "__main__":
                             f"    Job Search Query: {node_output['job_search_query']}"
                         )
                     if "final_answer" in node_output:
-                        print("    Final answer generated")
+                        print(
+                            f"    Final answer generated{node_output['final_answer']}"
+                        )
 
             # Get final state
             final_state = await react_graph.aget_state(config)
