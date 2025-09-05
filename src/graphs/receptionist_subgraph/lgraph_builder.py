@@ -43,7 +43,7 @@ builder.add_edge(START, "receptor")
 #    b. -> receptor: If more info needed (with interrupt for user input)
 # 4. handoff_to_agent -> END: Completes the subgraph
 # 5. distil_user_needs -> handoff_to_agent: Distils user needs
-
+subgraph = builder.compile()
 graph_with_in_memory_checkpointer = builder.compile(checkpointer=MemorySaver())
 
 

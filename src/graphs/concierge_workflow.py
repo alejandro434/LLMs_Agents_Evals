@@ -4,11 +4,10 @@ uv run -m src.graphs.concierge_workflow
 """
 
 # %%
-import uuid
 from pprint import pprint
 from typing import Literal
 
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.types import Command, interrupt
@@ -19,10 +18,10 @@ from src.graphs.followup_node.schemas import FollowupSubgraphState
 from src.graphs.qualifier.lgraph_builder import subgraph as qualify_user_subgraph
 from src.graphs.qualifier.schemas import UserInfoOutputSchema
 from src.graphs.ReAct_subgraph.lgraph_builder import (
-    graph_with_in_memory_checkpointer as react_subgraph,
+    subgraph as react_subgraph,
 )
 from src.graphs.receptionist_subgraph.lgraph_builder import (
-    graph_with_in_memory_checkpointer as receptor_router_subgraph,
+    subgraph as receptor_router_subgraph,
 )
 from src.graphs.receptionist_subgraph.schemas import (
     UserProfileSchema,
@@ -66,7 +65,7 @@ async def qualify_user(
                     f"The user's state, zip code, and age are: "
                     f"{response.get('collected_user_info')}"
                 )
-                entering_message = "You qualifed as an user!"
+                entering_message = "You qualifed!"
 
                 return Command(
                     goto="receptor_router",
@@ -80,33 +79,29 @@ async def qualify_user(
             )
         return Command(
             goto=END,
-            update={"messages": [response.get("why_not_qualified")]},
+            update={"messages": [AIMessage(content=response.get("why_not_qualified"))]},
         )
     return Command(goto=END, update={"messages": ["FAILED TO QUALIFY USER!"]})
 
 
 async def receptor_router(
     state: ConciergeGraphState,
-) -> Command[Literal["Jobs", "Educator", "Events", "CareerCoach", "Entrepreneur"]]:
+) -> Command[
+    Literal[
+        "receptor_router",
+        "Jobs",
+        "Educator",
+        "Events",
+        "CareerCoach",
+        "Entrepreneur",
+    ]
+]:
     """Receptor router."""
-    # Use a consistent thread_id for the receptionist subgraph to maintain state
-    # Create a stable thread_id based on the conversation to maintain state across turns
-    # We'll use a hash of the first message or a fixed ID
-    if state.get("messages"):
-        # Use a hash of the first message to create a stable thread_id
-        first_msg = str(state["messages"][0])
-        import hashlib
-
-        thread_hash = hashlib.md5(first_msg.encode()).hexdigest()[:8]
-        config = {"configurable": {"thread_id": f"receptionist_{thread_hash}"}}
-    else:
-        config = {"configurable": {"thread_id": "receptionist_default"}}
-
-    # Build messages list and append user_state_zip_and_age if present
     _msgs = list(state["messages"]) if isinstance(state.get("messages"), list) else []
     if isinstance(state.get("user_state_zip_and_age"), str):
         _msgs.append(state["user_state_zip_and_age"])
-    response = await receptor_router_subgraph.ainvoke({"messages": _msgs}, config)
+
+    response = await receptor_router_subgraph.ainvoke({"messages": _msgs})
 
     # Extract fields from the response, which may be partial if interrupted
     pprint(f"receptor_router response: {response}")
@@ -120,15 +115,12 @@ async def receptor_router(
     # If no agent selected (receptionist interrupted for more info), go to END
     # The direct_response will contain the question for the user
     if not selected_agent:
+        user_resp_to_interrupt = interrupt(direct_response)
         return Command(
-            goto=END,
+            goto="receptor_router",
             update={
                 "user_profile": user_profile,
-                "task": user_request.task if user_request else None,
-                "rationale_of_the_handoff": rationale_of_the_handoff,
-                "selected_agent": selected_agent,
-                "direct_response_to_the_user": direct_response,
-                "messages": [AIMessage(content=direct_response)],
+                "messages": [user_resp_to_interrupt],
             },
         )
 
@@ -157,15 +149,6 @@ async def react(state: ConciergeGraphState) -> Command[Literal["ask_if_continue"
     """React node."""
     # Use a consistent thread_id for the react subgraph to maintain state
     # Create a stable thread_id based on the conversation
-    if state.get("messages"):
-        # Use a hash of the first message to create a stable thread_id
-        first_msg = str(state["messages"][0])
-        import hashlib
-
-        thread_hash = hashlib.md5(first_msg.encode()).hexdigest()[:8]
-        config = {"configurable": {"thread_id": f"react_{thread_hash}"}}
-    else:
-        config = {"configurable": {"thread_id": "react_default"}}
 
     if not state.get("task"):
         raise ValueError("React node: task is missing")
@@ -196,17 +179,20 @@ async def react(state: ConciergeGraphState) -> Command[Literal["ask_if_continue"
         "why_this_agent_can_help": state.get("rationale_of_the_handoff"),
     }
 
-    response = await react_subgraph.ainvoke(_input, config)
-
-    pprint(f"react response: {response}")
-
-    return Command(
-        goto="ask_if_continue",
-        update={
-            "final_answer": response.get("final_answer"),
-            "messages": [AIMessage(content=response.get("final_answer").content)],
-        },
-    )
+    response = await react_subgraph.ainvoke(_input)
+    if (
+        response.get("final_answer")
+        and isinstance(response.get("final_answer"), ToolMessage)
+        and response.get("final_answer").content != ""
+    ):
+        return Command(
+            goto="ask_if_continue",
+            update={
+                "final_answer": response.get("final_answer"),
+                "messages": [AIMessage(content=response.get("final_answer").content)],
+            },
+        )
+    return Command(goto=END, update={"messages": ["FAILED TO GET FINAL ANSWER!"]})
 
 
 async def ask_if_continue(
@@ -284,36 +270,31 @@ builder.add_node("CareerCoach", react)
 builder.add_node("Entrepreneur", react)
 
 builder.add_edge(START, "qualify_user")
-builder.add_edge("qualify_user", "receptor_router")
 graph_with_in_memory_checkpointer = builder.compile(checkpointer=MemorySaver())
 graph = builder.compile()
 
 if __name__ == "__main__":
     import asyncio
+    import uuid
 
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    INPUT_MESSAGE_1 = (
+        "i'm 22 years old. zip code is 20001. My name is Alex, and im unemployed."
+    )
+    INPUT_MESSAGE_2 = "My name is Alex, and im unemployed, and i'm looking for a job  as  a software engineer."
+    messages = [INPUT_MESSAGE_1, INPUT_MESSAGE_2]
 
-    async def test_not_qualified_users() -> None:
-        """Test the graph_with_in_memory_checkpointer directly with not qualified users.
+    async def test_concierge_workflow() -> None:
+        """Test the concierge workflow."""
+        for message in messages:
+            next_node = graph_with_in_memory_checkpointer.get_state(config).next
 
-        The main goal is to check that the graph is ENDING when the user is not qualified.
-        When the graph ends, the graph always should show the reason why the user is not qualified.
-        This reason should be a IAmMessage.
-        This has to be the only message returned by the graph.
+            async for _ in graph_with_in_memory_checkpointer.astream(
+                {"messages": [message]} if not next_node else Command(resume=message),
+                config,
+                stream_mode="updates",
+                debug=True,
+            ):
+                pass
 
-        """
-        print("\n" + "=" * 70)
-        print("TESTING CASES WHERE THE USER IS NOT QUALIFIED")
-        print("=" * 70)
-
-        test_input_1 = {
-            "messages": [
-                "Hi, I'm John Smith im 20 years old. I'm looking for a job and my zip code is 20850, I'm looking for a job in Virginia. I'm unemployed."
-            ]
-        }
-
-        _ = await graph_with_in_memory_checkpointer.ainvoke(
-            test_input_1, config, debug=True
-        )
-
-    asyncio.run(test_not_qualified_users())
+    asyncio.run(test_concierge_workflow())

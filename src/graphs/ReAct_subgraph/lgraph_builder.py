@@ -28,7 +28,7 @@ builder.add_edge(START, "tools_advisor_node")
 # Explicit edges so Studio shows node connectivity
 builder.add_edge("tools_advisor_node", "react_node")
 builder.add_edge("react_node", END)
-
+subgraph = builder.compile()
 graph_with_in_memory_checkpointer = builder.compile(checkpointer=MemorySaver())
 if __name__ == "__main__":
     import asyncio
