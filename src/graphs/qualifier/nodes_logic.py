@@ -25,21 +25,36 @@ async def collect_user_info(
     - If prior user info exists, inject a concise context and merge new results
       to preserve previously extracted fields.
     - Ask for missing fields if needed via the chain's direct response.
+    - Ensures reliable merging with ZIP-based state inference.
     """
-    history = state["messages"][1:] if len(state["messages"]) > 1 else None
+    import json
+
+    history = state["messages"][1:] if len(state["messages"]) > 1 else []
 
     prior_info = state.get("collected_user_info")
     context_injection = None
+
+    # Check if we have valid prior info (not just empty strings)
     if (
         isinstance(prior_info, UserInfoOutputSchema)
         and prior_info.at_least_one_user_info_field_is_filled
     ):
-        context_injection = (
-            "The user had already provided some data:\n"
-            "here is the partial user info:\n"
-            f"{prior_info.model_dump_json(indent=2)}\n"
-            "ask concisely for the missing information."
-        )
+        # Create a clean representation for the context, filtering out None/empty values
+        prior_data = {}
+        if prior_info.age is not None:
+            prior_data["age"] = prior_info.age
+        if prior_info.state and prior_info.state.strip():
+            prior_data["state"] = prior_info.state
+        if prior_info.zip_code and prior_info.zip_code.strip():
+            prior_data["zip_code"] = prior_info.zip_code
+
+        if prior_data:  # Only inject context if we have actual data
+            context_injection = (
+                "The user had already provided some data:\n"
+                "here is the partial user info:\n"
+                f"{json.dumps(prior_data, indent=2)}\n"
+                "ask concisely for the missing information."
+            )
 
     # Invoke with optional history and context
     response = await user_info_collection_chain.ainvoke(
@@ -48,48 +63,61 @@ async def collect_user_info(
         runtime_context_injection=context_injection,
     )
 
-    # Merge with prior to retain previously filled values
+    # Always merge with prior to retain previously filled values
+    # The improved merge function now handles ZIP-based state inference
     if isinstance(prior_info, UserInfoOutputSchema):
         response = response.merged_with_prior(prior_info)
 
-    direct_response_to_the_user = response.direct_response_to_the_user
-    update_payload: dict[str, object] = {"collected_user_info": response}
-    # Avoid pushing None into the messages channel (MessageLike must be str/BaseMessage)
-    if (
-        isinstance(direct_response_to_the_user, str)
-        and direct_response_to_the_user.strip() != ""
-    ):
-        update_payload["messages"] = [direct_response_to_the_user]
+    # Validate that we have the required fields (age and zip_code)
+    # Check for actual values, not just non-None
+    has_valid_age = response.age is not None
+    has_valid_zip = (
+        response.zip_code is not None
+        and isinstance(response.zip_code, str)
+        and response.zip_code.strip() != ""
+    )
 
     # If age or zip code is missing, ask for it
-    if response.age is None or response.zip_code is None:
-        update_payload["messages"] = [response.direct_response_to_the_user]
+    if not has_valid_age or not has_valid_zip:
+        # Ensure we have a response to show the user
+        if not response.direct_response_to_the_user:
+            missing_fields = []
+            if not has_valid_age:
+                missing_fields.append("your age")
+            if not has_valid_zip:
+                missing_fields.append("your ZIP code")
+            response.direct_response_to_the_user = (
+                f"Could you please provide {' and '.join(missing_fields)}?"
+            )
+
         user_resp_to_interrupt = interrupt(response.direct_response_to_the_user)
 
         return Command(
             goto="collect_user_info", update={"messages": [user_resp_to_interrupt]}
         )
 
-    return Command(goto="qualify_user", update=update_payload)
+    return Command(goto="qualify_user", update={"collected_user_info": response})
 
 
 async def qualify_user(
     state: QualifierSubgraphState,
 ) -> Command[Literal[END]]:
     """Qualify user node - qualifies user."""
-    collected_user_info = state["collected_user_info"]
-    response = await qualifier_chain.ainvoke(collected_user_info)
-    if response.qualified:
-        return Command(goto=END, update={"is_user_qualified": response.qualified})
+    if state.get("collected_user_info"):
+        collected_user_info = state["collected_user_info"]
+        response = await qualifier_chain.ainvoke(collected_user_info)
 
-    update_payload: dict[str, object] = {"is_user_qualified": response.qualified}
-    # Guard against None messages to satisfy LangChain MessageLike rules
-    if (
-        isinstance(response.why_not_qualified, str)
-        and response.why_not_qualified.strip() != ""
-    ):
-        update_payload["messages"] = [response.why_not_qualified]
-    return Command(goto=END, update=update_payload)
+        if isinstance(response.qualified, bool):
+            return Command(
+                goto=END,
+                update={
+                    "is_user_qualified": response.qualified,
+                    "why_not_qualified": [response.why_not_qualified],
+                },
+            )
+        return Command(goto=END, update={"messages": ["FAILED TO QUALIFY USER!"]})
+
+    return Command(goto=END, update={"messages": ["FAILED TO COLLECT USER INFO!"]})
 
 
 if __name__ == "__main__":

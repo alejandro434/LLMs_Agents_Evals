@@ -51,7 +51,7 @@ class UserInfoOutputSchema(BaseModel):
 
     @property
     def at_least_one_user_info_field_is_filled(self) -> bool:
-        """Return True if any informational field (age/state/zip) is present."""
+        """Return True if any informational field (age/state/zip) is present and non-empty."""
         return (
             self.age is not None
             or (self.state is not None and str(self.state).strip() != "")
@@ -61,24 +61,50 @@ class UserInfoOutputSchema(BaseModel):
     def merged_with_prior(
         self, prior: "UserInfoOutputSchema"
     ) -> "UserInfoOutputSchema":
-        """Merge with a prior instance, preferring current non-None values.
+        """Merge with a prior instance, preferring current non-None/non-empty values.
 
-        - For each field (age/state/zip_code), choose the new value if not None;
+        - For each field (age/state/zip_code), choose the new value if not None/empty;
           otherwise, keep the prior value.
+        - If ZIP code is present after merge, re-infer state from ZIP.
         - Preserve the current direct_response_to_the_user.
         """
         if not isinstance(prior, UserInfoOutputSchema):
             return self
+
         merged: dict[str, object | None] = {}
         for field_name in ["age", "state", "zip_code"]:
             new_value = getattr(self, field_name, None)
             old_value = getattr(prior, field_name, None)
+
+            # For string fields, treat empty strings as None
+            if field_name in ["state", "zip_code"]:
+                if isinstance(new_value, str) and new_value.strip() == "":
+                    new_value = None
+                if isinstance(old_value, str) and old_value.strip() == "":
+                    old_value = None
+
             merged[field_name] = new_value if new_value is not None else old_value
 
-        return UserInfoOutputSchema(
+        # Create the merged instance
+        result = UserInfoOutputSchema(
             direct_response_to_the_user=self.direct_response_to_the_user,
             **merged,
         )
+
+        # If we have a ZIP code after merging, ensure state is inferred from it
+        if result.zip_code:
+            from src.graphs.qualifier.chains import (
+                _extract_zip5,
+                _infer_state_from_zip,
+            )
+
+            zip5 = _extract_zip5(result.zip_code)
+            if zip5:
+                inferred_state = _infer_state_from_zip(zip5)
+                if inferred_state:
+                    result = result.model_copy(update={"state": inferred_state})
+
+        return result
 
 
 class QualifierOutputSchema(BaseModel):
@@ -109,6 +135,7 @@ class QualifierSubgraphState(MessagesState):
     is_user_qualified: QualifierOutputSchema = Field(
         default_factory=QualifierOutputSchema
     )
+    why_not_qualified: str | None = Field(default=None)
 
 
 if __name__ == "__main__":
